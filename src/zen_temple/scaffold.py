@@ -220,6 +220,10 @@ class ScaffoldGenerator:
     >
         Reset
     </button>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Double: <span x-text="double"></span></p>
+    </div>
 </div>
 """
         counter_path = project_path / "templates/components/counter.html"
@@ -299,6 +303,10 @@ class ScaffoldGenerator:
     <div x-show="todos.length === 0" class="text-center text-gray-400 py-8">
         No todos yet. Add one above!
     </div>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Total: <span x-text="totalCount"></span> | Completed: <span x-text="completedCount"></span></p>
+    </div>
 </div>
 """
         todo_path = project_path / "templates/components/todo.html"
@@ -313,8 +321,7 @@ class ScaffoldGenerator:
     <button
         hx-get="/api/data"
         hx-trigger="click"
-        hx-target="#data-container"
-        hx-swap="innerHTML"
+        hx-swap="none"
         class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded mb-4"
     >
         Load Data
@@ -325,6 +332,10 @@ class ScaffoldGenerator:
         class="p-4 bg-gray-50 rounded min-h-[100px]"
     >
         Click the button to load data from the server.
+    </div>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Items loaded: <span x-text="itemCount"></span></p>
     </div>
 </div>
 
@@ -359,6 +370,7 @@ class ScaffoldGenerator:
     <header class="text-center mb-12">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">zen-temple</h1>
         <p class="text-lg text-gray-600">Zero-build, zero-magic frontend components</p>
+        <p class="text-sm text-gray-500 mt-2">Using Jinja Macros + Alpine.js Classes + HTMX</p>
     </header>
 
     <section class="space-y-6">
@@ -366,16 +378,16 @@ class ScaffoldGenerator:
 
         <div class="grid md:grid-cols-2 gap-6">
             <div>
-                {% include "components/counter.html" %}
+                {{ counter(initial_count=0) }}
             </div>
 
             <div>
-                {% include "components/data_fetch.html" %}
+                {{ data_fetch() }}
             </div>
         </div>
 
         <div>
-            {% include "components/todo.html" %}
+            {{ todo() }}
         </div>
     </section>
 
@@ -423,9 +435,9 @@ def get_data():
     Example API endpoint that returns HTML fragments for HTMX.
 
     Following zen-temple philosophy:
-    - Server returns HTML fragments (not JSON for UI updates)
-    - HTMX handles the communication
-    - No JavaScript needed for this interaction
+    - Server returns JSON data
+    - HTMX fetches the data
+    - Alpine.js handles reactive rendering via class methods
     """
     # In production, this would fetch real data
     items = [
@@ -590,6 +602,10 @@ Use HTMX for server communication:
 
     def _get_component_template(self, component_name: str, component_type: str) -> str:
         """Get template content for a component type."""
+        # Convert component name to different cases - done before templates
+        name_snake = component_name.replace('-', '_')
+        name_pascal = ''.join(word.capitalize() for word in component_name.replace('_', '-').split('-'))
+        
         templates = {
             "basic": """<!-- {name} Component -->
 <div
@@ -599,7 +615,7 @@ Use HTMX for server communication:
     }}"
     class="bg-white rounded-lg shadow-md p-6"
 >
-    <h3 class="text-xl font-semibold mb-4">{name}</h3>
+    <h3 class="text-xl font-semibold mb-4">{component_name}</h3>
     <p x-text="message"></p>
 </div>
 """,
@@ -651,6 +667,7 @@ Use HTMX for server communication:
         }}
     }}"
     x-init="loadItems()"
+    @htmx:after-request="sync($event.detail.xhr.response)"
     class="bg-white rounded-lg shadow-md p-6"
 >
     <h3 class="text-xl font-semibold mb-4">{name}</h3>
@@ -665,6 +682,10 @@ Use HTMX for server communication:
 
     <div x-show="items.length === 0" class="text-center text-gray-400 py-8">
         No items found.
+    </div>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Total items: <span x-text="itemCount"></span></p>
     </div>
 </div>
 """,
