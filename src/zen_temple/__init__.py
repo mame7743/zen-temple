@@ -17,16 +17,16 @@ Architecture:
 
 __version__ = "0.1.0"
 
-from zen_temple.template_manager import TemplateManager
-from zen_temple.validator import ComponentValidator
-from zen_temple.scaffold import ScaffoldGenerator
 from zen_temple.logic_layer import (
-    PureLogic,
+    ComponentLogic,
     ComponentState,
     LogicBridge,
-    ComponentLogic,
+    PureLogic,
     create_macro_helpers,
 )
+from zen_temple.scaffold import ScaffoldGenerator
+from zen_temple.template_manager import TemplateManager
+from zen_temple.validator import ComponentValidator
 
 __all__ = [
     "TemplateManager",
