@@ -1,0 +1,84 @@
+[project]
+name = "zen-temple"
+version = "0.1.0"
+description = "A zero-build, zero-magic frontend component system for backend developers"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "zen-temple contributors"}
+]
+keywords = ["htmx", "alpine.js", "jinja2", "tailwind", "web-ui", "mockup", "component"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    "jinja2>=3.1.0",
+    "click>=8.1.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    "ruff>=0.1.0",
+    "mypy>=1.0.0",
+]
+server = [
+    "flask>=3.0.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.scripts]
+zen-temple = "zen_temple.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/mame7743/zen-temple"
+Repository = "https://github.com/mame7743/zen-temple"
+Issues = "https://github.com/mame7743/zen-temple/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/zen_temple"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "B", "UP"]
+ignore = []
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --cov=zen_temple --cov-report=term-missing"
