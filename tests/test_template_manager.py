@@ -3,6 +3,18 @@
 import pytest
 from pathlib import Path
 from zen_temple.template_manager import TemplateManager
+from zen_temple.logic_layer import PureLogic
+from typing import Dict, Any
+
+
+class TestLogic(PureLogic):
+    """Test logic class for template manager tests."""
+    
+    def __init__(self, value: int = 0):
+        self.value = value
+    
+    def to_context(self) -> Dict[str, Any]:
+        return {"test_value": self.value}
 
 
 def test_template_manager_init(tmp_path: Path) -> None:
@@ -31,6 +43,36 @@ def test_render_component(tmp_path: Path) -> None:
     result = manager.render_component("test", content="Hello")
     
     assert result == "<div>Hello</div>"
+
+
+def test_render_component_with_logic(tmp_path: Path) -> None:
+    """Test rendering a component with pure logic (Zero-Legacy Architecture)."""
+    # Create a test component that uses logic context
+    component_file = tmp_path / "test_logic.html"
+    component_file.write_text("<div>Value: {{ test_value }}</div>")
+    
+    # Create pure logic instance
+    logic = TestLogic(value=42)
+    
+    # Render with logic (bridge is automatic)
+    manager = TemplateManager(template_dirs=[tmp_path])
+    result = manager.render_component("test_logic", logic=logic)
+    
+    assert result == "<div>Value: 42</div>"
+
+
+def test_render_component_logic_with_extra_context(tmp_path: Path) -> None:
+    """Test rendering with logic and extra context."""
+    component_file = tmp_path / "test.html"
+    component_file.write_text("<div>{{ test_value }} - {{ extra }}</div>")
+    
+    logic = TestLogic(value=10)
+    
+    manager = TemplateManager(template_dirs=[tmp_path])
+    result = manager.render_component("test", logic=logic, extra="data")
+    
+    assert "10" in result
+    assert "data" in result
 
 
 def test_list_components(tmp_path: Path) -> None:
@@ -65,3 +107,18 @@ def test_json_encode_filter(tmp_path: Path) -> None:
     result = manager.render_string(template_str, {"data": {"key": "value"}})
     
     assert '{"key": "value"}' in result
+
+
+def test_logic_bridge_integration(tmp_path: Path) -> None:
+    """Test that LogicBridge is integrated into TemplateManager."""
+    manager = TemplateManager(template_dirs=[tmp_path])
+    
+    # Manager should have a logic bridge
+    assert manager.logic_bridge is not None
+    
+    # Create logic and test bridge functionality
+    logic = TestLogic(value=99)
+    context = manager.logic_bridge.prepare_context(logic)
+    
+    assert context == {"test_value": 99}
+

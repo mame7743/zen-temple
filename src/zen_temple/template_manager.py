@@ -5,6 +5,8 @@ from pathlib import Path
 from typing import Dict, Any, Optional, List
 from jinja2 import Environment, FileSystemLoader, select_autoescape, Template
 
+from zen_temple.logic_layer import LogicBridge, PureLogic, create_macro_helpers
+
 
 class TemplateManager:
     """
@@ -14,19 +16,22 @@ class TemplateManager:
     - Templates are the source of truth
     - No build step required
     - Clear, transparent rendering
+    - Logic is Pure, Bridge is Minimal (via LogicBridge)
     """
     
-    def __init__(self, template_dirs: Optional[List[Path]] = None):
+    def __init__(self, template_dirs: Optional[List[Path]] = None, logic_bridge: Optional[LogicBridge] = None):
         """
         Initialize the template manager.
         
         Args:
             template_dirs: List of directories to search for templates
+            logic_bridge: Optional logic bridge for connecting pure logic to templates
         """
         if template_dirs is None:
             template_dirs = [Path.cwd() / "templates"]
         
         self.template_dirs = [Path(d) for d in template_dirs]
+        self.logic_bridge = logic_bridge or LogicBridge()
         self._setup_environment()
     
     def _setup_environment(self) -> None:
@@ -41,6 +46,10 @@ class TemplateManager:
         
         # Add custom filters for zen-temple
         self.env.filters['json_encode'] = self._json_encode_filter
+        
+        # Add macro helpers to globals (bridge between logic and templates)
+        macro_helpers = create_macro_helpers()
+        self.env.globals.update(macro_helpers)
     
     @staticmethod
     def _json_encode_filter(value: Any) -> str:
@@ -53,6 +62,7 @@ class TemplateManager:
         self,
         component_name: str,
         context: Optional[Dict[str, Any]] = None,
+        logic: Optional[PureLogic] = None,
         **kwargs: Any
     ) -> str:
         """
@@ -61,6 +71,7 @@ class TemplateManager:
         Args:
             component_name: Name of the component template
             context: Context dictionary for rendering
+            logic: Optional pure logic instance (follows "Logic is Pure" principle)
             **kwargs: Additional context variables
             
         Returns:
@@ -68,6 +79,12 @@ class TemplateManager:
         """
         if context is None:
             context = {}
+        
+        # If logic is provided, prepare context from it (minimal bridge)
+        if logic is not None:
+            logic_context = self.logic_bridge.prepare_context(logic, extra_context=context)
+            context = logic_context
+        
         context.update(kwargs)
         
         template = self.env.get_template(f"{component_name}.html")
