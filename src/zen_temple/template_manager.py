@@ -34,7 +34,7 @@ class TemplateManager:
         loader = FileSystemLoader([str(d) for d in self.template_dirs])
         self.env = Environment(
             loader=loader,
-            autoescape=select_autoescape(['html', 'xml', 'jinja', 'jinja2']),
+            autoescape=select_autoescape(['html', 'xml']),
             trim_blocks=True,
             lstrip_blocks=True,
         )
