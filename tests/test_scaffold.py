@@ -127,7 +127,8 @@ def test_create_base_layout(tmp_path: Path) -> None:
     assert layout_path.exists()
     content = layout_path.read_text()
     
-    # Check for required CDN imports
+    # Check for required CDN imports in generated template
+    # Note: These are literal strings in our template, not user input
     assert "htmx.org" in content
     assert "alpinejs" in content
     assert "tailwindcss.com" in content

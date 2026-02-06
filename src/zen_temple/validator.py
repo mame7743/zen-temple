@@ -95,7 +95,8 @@ class ComponentValidator:
     def _check_inline_scripts(self, content: str, result: ValidationResult) -> None:
         """Check for inline scripts (which violate zen-temple philosophy)."""
         # Look for <script> tags that aren't CDN includes
-        script_pattern = r'<script(?![^>]*src=)[^>]*>[\s\S]*?</script>'
+        # Use a more robust regex that handles whitespace in closing tags
+        script_pattern = r'<script(?![^>]*src=)[^>]*>[\s\S]*?</script[\s]*>'
         matches = re.finditer(script_pattern, content, re.IGNORECASE)
         
         for match in matches:
