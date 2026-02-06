@@ -35,7 +35,7 @@ class ComponentValidator:
     - Template structure
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the validator."""
         self.rules = [
             self._check_inline_scripts,
