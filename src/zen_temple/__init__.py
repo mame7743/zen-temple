@@ -13,9 +13,9 @@ Tailwind CSS, following the zen-temple philosophy:
 
 __version__ = "0.1.0"
 
+from zen_temple.scaffold import ScaffoldGenerator
 from zen_temple.template_manager import TemplateManager
 from zen_temple.validator import ComponentValidator
-from zen_temple.scaffold import ScaffoldGenerator
 
 __all__ = [
     "TemplateManager",
