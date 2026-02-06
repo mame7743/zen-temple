@@ -1,7 +1,7 @@
 """Component validator for zen-temple."""
 
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List
 import re
 from pydantic import BaseModel, Field
 
