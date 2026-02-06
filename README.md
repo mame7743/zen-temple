@@ -18,6 +18,36 @@ zen-temple follows the **Zero Template** philosophy:
 - **Computed properties via getters** - Use JavaScript `get` accessors
 - **Loose coupling** - Components are independent and self-contained
 
+### 🏛️ Zero-Legacy Architecture
+
+**NEW:** zen-temple implements the **"Logic is Pure, Bridge is Minimal"** design principle:
+
+- **Pure Logic Layer**: Business logic in vanilla Python classes (no framework dependencies)
+- **Minimal Bridge**: Jinja macros connect logic to templates
+- **Zero Legacy**: Clean separation ensures easy testing, reusability, and migration
+
+```python
+from zen_temple import PureLogic, TemplateManager
+
+# 1. Pure Logic (vanilla Python)
+class CounterLogic(PureLogic):
+    def __init__(self, initial_value=0):
+        self._value = initial_value
+    
+    def increment(self):
+        self._value += 1
+    
+    def to_context(self):
+        return {"count": self._value}
+
+# 2. Minimal Bridge (automatic via TemplateManager)
+counter = CounterLogic(initial_value=0)
+manager = TemplateManager()
+html = manager.render_component("counter", logic=counter)
+```
+
+See [ZERO_LEGACY_ARCHITECTURE.md](ZERO_LEGACY_ARCHITECTURE.md) for details.
+
 Inspired by Svelte's reactive design philosophy, but without the build step.
 
 ## 🚀 Quick Start
@@ -283,6 +313,33 @@ components = manager.list_components()
 # Check if component exists
 if manager.component_exists("my-component"):
     html = manager.render_component("my-component")
+```
+
+### Pure Logic Layer (Zero-Legacy Architecture)
+
+```python
+from zen_temple import PureLogic, TemplateManager
+from typing import Dict, Any
+
+# Define pure business logic (no framework dependencies)
+class TodoListLogic(PureLogic):
+    def __init__(self):
+        self._todos = []
+    
+    def add_todo(self, text: str):
+        self._todos.append({"id": len(self._todos), "text": text, "done": False})
+    
+    def to_context(self) -> Dict[str, Any]:
+        """Minimal bridge to templates"""
+        return {"todos": self._todos}
+
+# Use logic with templates
+todos = TodoListLogic()
+todos.add_todo("Learn zen-temple")
+todos.add_todo("Build an app")
+
+manager = TemplateManager()
+html = manager.render_component("todo_list", logic=todos)
 ```
 
 ### Component Validator
