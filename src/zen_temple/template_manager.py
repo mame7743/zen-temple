@@ -1,9 +1,11 @@
 """Template Manager for zen-temple components."""
 
+import json
 from pathlib import Path
 from typing import Any, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from markupsafe import Markup
 
 
 class TemplateManager:
@@ -45,9 +47,6 @@ class TemplateManager:
     @staticmethod
     def _json_encode_filter(value: Any) -> str:
         """Filter to safely encode values as JSON for Alpine.js."""
-        import json
-
-        from markupsafe import Markup
         return Markup(json.dumps(value))
 
     def render_component(
