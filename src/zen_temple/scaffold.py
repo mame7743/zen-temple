@@ -1,6 +1,5 @@
 """Scaffold generator for zen-temple projects."""
 
-import os
 from pathlib import Path
 from typing import Dict, Any, Optional, List
 import yaml
