@@ -191,17 +191,18 @@ class ScaffoldGenerator:
         """Create example components demonstrating zen-temple philosophy."""
         components = {}
         
-        # Counter component (Alpine.js reactive example)
-        counter_content = '''<!-- Counter Component - Demonstrates Alpine.js state management -->
+        # Counter component (Alpine.js reactive example with class-based state)
+        counter_content = '''<!-- Counter Component - Demonstrates Alpine.js class-based state management -->
+{%- macro counter(initial_count=0) -%}
 <div 
-    x-data="{ count: 0 }"
+    x-data="new CounterState({{ initial_count }})"
     class="bg-white rounded-lg shadow-md p-6 max-w-md"
 >
     <h3 class="text-xl font-semibold mb-4">Counter</h3>
     
     <div class="flex items-center justify-between mb-4">
         <button 
-            @click="count--"
+            @click="decrement()"
             class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded"
         >
             -
@@ -210,7 +211,7 @@ class ScaffoldGenerator:
         <span class="text-3xl font-bold" x-text="count"></span>
         
         <button 
-            @click="count++"
+            @click="increment()"
             class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded"
         >
             +
@@ -218,41 +219,53 @@ class ScaffoldGenerator:
     </div>
     
     <button 
-        @click="count = 0"
+        @click="reset()"
         class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
     >
         Reset
     </button>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Double: <span x-text="double"></span></p>
+    </div>
 </div>
+
+<script>
+// CounterState - Encapsulated component state and logic
+class CounterState {
+    constructor(initialCount = 0) {
+        this.count = initialCount;
+    }
+    
+    increment() {
+        this.count++;
+    }
+    
+    decrement() {
+        this.count--;
+    }
+    
+    reset() {
+        this.count = 0;
+    }
+    
+    // Computed property using getter
+    get double() {
+        return this.count * 2;
+    }
+}
+</script>
+{%- endmacro -%}
 '''
         counter_path = project_path / "templates/components/counter.html"
         counter_path.write_text(counter_content)
         components['templates/components/counter.html'] = counter_path
         
-        # Todo list component (HTMX + Alpine.js example)
-        todo_content = '''<!-- Todo List Component - Demonstrates HTMX + Alpine.js integration -->
+        # Todo list component (HTMX + Alpine.js example with class-based state)
+        todo_content = '''<!-- Todo List Component - Demonstrates class-based state management -->
+{%- macro todo() -%}
 <div 
-    x-data="{
-        todos: [],
-        newTodo: '',
-        addTodo() {
-            if (this.newTodo.trim()) {
-                this.todos.push({
-                    id: Date.now(),
-                    text: this.newTodo,
-                    completed: false
-                });
-                this.newTodo = '';
-            }
-        },
-        toggleTodo(id) {
-            const todo = this.todos.find(t => t.id === id);
-            if (todo) todo.completed = !todo.completed;
-        },
-        removeTodo(id) {
-            this.todos = this.todos.filter(t => t.id !== id);
-        }
-    }"
+    x-data="new TodoState()"
     class="bg-white rounded-lg shadow-md p-6 max-w-2xl"
 >
     <h3 class="text-xl font-semibold mb-4">Todo List</h3>
@@ -302,58 +315,139 @@ class ScaffoldGenerator:
     <div x-show="todos.length === 0" class="text-center text-gray-400 py-8">
         No todos yet. Add one above!
     </div>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Total: <span x-text="totalCount"></span> | Completed: <span x-text="completedCount"></span></p>
+    </div>
 </div>
+
+<script>
+// TodoState - Encapsulated todo list state and logic
+class TodoState {
+    constructor() {
+        this.todos = [];
+        this.newTodo = '';
+    }
+    
+    addTodo() {
+        if (this.newTodo.trim()) {
+            this.todos.push({
+                id: Date.now(),
+                text: this.newTodo,
+                completed: false
+            });
+            this.newTodo = '';
+        }
+    }
+    
+    toggleTodo(id) {
+        const todo = this.todos.find(t => t.id === id);
+        if (todo) todo.completed = !todo.completed;
+    }
+    
+    removeTodo(id) {
+        this.todos = this.todos.filter(t => t.id !== id);
+    }
+    
+    // Computed properties using getters
+    get totalCount() {
+        return this.todos.length;
+    }
+    
+    get completedCount() {
+        return this.todos.filter(t => t.completed).length;
+    }
+}
+</script>
+{%- endmacro -%}
 '''
         todo_path = project_path / "templates/components/todo.html"
         todo_path.write_text(todo_content)
         components['templates/components/todo.html'] = todo_path
         
-        # Data fetch component (HTMX example)
-        fetch_content = '''<!-- Data Fetch Component - Demonstrates HTMX for API communication -->
-<div class="bg-white rounded-lg shadow-md p-6 max-w-2xl">
+        # Data fetch component (HTMX example with explicit data flow)
+        fetch_content = '''<!-- Data Fetch Component - Demonstrates HTMX with explicit data flow -->
+{%- macro data_fetch() -%}
+<div 
+    x-data="new DataFetchState()"
+    @htmx:after-request="sync($event.detail.xhr.response)"
+    class="bg-white rounded-lg shadow-md p-6 max-w-2xl"
+>
     <h3 class="text-xl font-semibold mb-4">Data Fetcher</h3>
     
     <button 
         hx-get="/api/data"
         hx-trigger="click"
-        hx-target="#data-container"
-        hx-swap="innerHTML"
+        hx-swap="none"
         class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded mb-4"
     >
         Load Data
     </button>
     
+    <div x-show="loading" class="text-center py-4">
+        <span class="text-gray-500">Loading...</span>
+    </div>
+    
     <div 
-        id="data-container"
-        class="p-4 bg-gray-50 rounded min-h-[100px]"
+        x-show="!loading && items.length > 0"
+        class="space-y-2"
+    >
+        <template x-for="item in items" :key="item.id">
+            <div class="p-3 bg-gray-50 rounded border">
+                <strong x-text="item.title"></strong>: <span x-text="item.description"></span>
+            </div>
+        </template>
+    </div>
+    
+    <div 
+        x-show="!loading && items.length === 0"
+        class="p-4 bg-gray-50 rounded min-h-[100px] text-center text-gray-400"
     >
         Click the button to load data from the server.
     </div>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Items loaded: <span x-text="itemCount"></span></p>
+    </div>
 </div>
 
-<!-- Example response template (server would return this) -->
-{% raw %}
-<!--
-<div class="space-y-2">
-    <div class="p-3 bg-white rounded border">
-        <strong>Item 1:</strong> Data loaded from server
-    </div>
-    <div class="p-3 bg-white rounded border">
-        <strong>Item 2:</strong> HTMX handles the communication
-    </div>
-    <div class="p-3 bg-white rounded border">
-        <strong>Item 3:</strong> Server returns HTML fragments
-    </div>
-</div>
--->
-{% endraw %}
+<script>
+// DataFetchState - Encapsulated data fetching state and logic
+class DataFetchState {
+    constructor() {
+        this.items = [];
+        this.loading = false;
+    }
+    
+    // Explicit data sync method called by HTMX
+    sync(jsonData) {
+        try {
+            const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+            this.items = data.items || data || [];
+            this.loading = false;
+        } catch (e) {
+            console.error('Failed to sync data:', e);
+            this.loading = false;
+        }
+    }
+    
+    // Computed property using getter
+    get itemCount() {
+        return this.items.length;
+    }
+}
+</script>
+{%- endmacro -%}
 '''
         fetch_path = project_path / "templates/components/data_fetch.html"
         fetch_path.write_text(fetch_content)
         components['templates/components/data_fetch.html'] = fetch_path
         
-        # Example index page
+        # Example index page with macro imports
         index_content = '''{% extends "layouts/base.html" %}
+{% from "components/counter.html" import counter %}
+{% from "components/todo.html" import todo %}
+{% from "components/data_fetch.html" import data_fetch %}
 
 {% block title %}zen-temple Examples{% endblock %}
 
@@ -362,6 +456,7 @@ class ScaffoldGenerator:
     <header class="text-center mb-12">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">zen-temple</h1>
         <p class="text-lg text-gray-600">Zero-build, zero-magic frontend components</p>
+        <p class="text-sm text-gray-500 mt-2">Using Jinja Macros + Alpine.js Classes + HTMX</p>
     </header>
     
     <section class="space-y-6">
@@ -369,16 +464,16 @@ class ScaffoldGenerator:
         
         <div class="grid md:grid-cols-2 gap-6">
             <div>
-                {% include "components/counter.html" %}
+                {{ counter(initial_count=0) }}
             </div>
             
             <div>
-                {% include "components/data_fetch.html" %}
+                {{ data_fetch() }}
             </div>
         </div>
         
         <div>
-            {% include "components/todo.html" %}
+            {{ todo() }}
         </div>
     </section>
     
@@ -399,8 +494,8 @@ class ScaffoldGenerator:
         """Create basic Flask server files."""
         files = {}
         
-        # Main app file
-        app_content = '''"""
+        # Main app file - use f-string for cleaner formatting
+        app_content = f'''"""
 Main application entry point for {project_name}.
 """
 
@@ -423,29 +518,23 @@ def index():
 @app.route('/api/data')
 def get_data():
     """
-    Example API endpoint that returns HTML fragments for HTMX.
+    Example API endpoint that returns JSON for Alpine.js to consume.
     
     Following zen-temple philosophy:
-    - Server returns HTML fragments (not JSON for UI updates)
-    - HTMX handles the communication
-    - No JavaScript needed for this interaction
+    - Server returns JSON data
+    - HTMX fetches the data
+    - Alpine.js handles reactive rendering via class methods
     """
     # In production, this would fetch real data
-    items = [
-        {{'id': 1, 'title': 'Item 1', 'description': 'Data loaded from server'}},
-        {{'id': 2, 'title': 'Item 2', 'description': 'HTMX handles the communication'}},
-        {{'id': 3, 'title': 'Item 3', 'description': 'Server returns HTML fragments'}},
-    ]
+    data = {{
+        'items': [
+            {{'id': 1, 'title': 'Item 1', 'description': 'Data loaded from server'}},
+            {{'id': 2, 'title': 'Item 2', 'description': 'HTMX handles the communication'}},
+            {{'id': 3, 'title': 'Item 3', 'description': 'Alpine.js renders the data'}},
+        ]
+    }}
     
-    # Return HTML fragment directly
-    html = '<div class="space-y-2">'
-    for item in items:
-        html += '<div class="p-3 bg-white rounded border">'
-        html += '<strong>' + item['title'] + ':</strong> ' + item['description']
-        html += '</div>'
-    html += '</div>'
-    
-    return html
+    return jsonify(data)
 
 
 @app.route('/api/json-example')
@@ -467,7 +556,7 @@ def get_json_example():
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-'''.format(project_name=project_name)
+'''
         
         app_path = project_path / "app/main.py"
         app_path.write_text(app_content)
@@ -593,33 +682,38 @@ Use HTMX for server communication:
     
     def _get_component_template(self, component_name: str, component_type: str) -> str:
         """Get template content for a component type."""
+        # Convert component name to different cases - done before templates
+        name_snake = component_name.replace('-', '_')
+        name_pascal = ''.join(word.capitalize() for word in component_name.replace('_', '-').split('-'))
+        
         templates = {
-            'basic': '''<!-- {name} Component -->
+            'basic': f'''<!-- {component_name} Component -->
+{{%- macro {name_snake}(message='Hello from {component_name}!') -%}}
 <div 
-    x-data="{{
-        // Component state goes here
-        message: 'Hello from {name}!'
-    }}"
+    x-data="new {name_pascal}State('{{{{{{ message }}}}}}')"
     class="bg-white rounded-lg shadow-md p-6"
 >
-    <h3 class="text-xl font-semibold mb-4">{name}</h3>
+    <h3 class="text-xl font-semibold mb-4">{component_name}</h3>
     <p x-text="message"></p>
 </div>
+
+<script>
+// {name_pascal}State - Component state and logic
+class {name_pascal}State {{
+    constructor(message) {{
+        this.message = message;
+    }}
+}}
+</script>
+{{%- endmacro -%}}
 ''',
-            'form': '''<!-- {name} Form Component -->
+            'form': f'''<!-- {component_name} Form Component -->
+{{%- macro {name_snake}() -%}}
 <div 
-    x-data="{{
-        formData: {{
-            // Form fields
-        }},
-        submit() {{
-            // Handle form submission
-            console.log('Form submitted:', this.formData);
-        }}
-    }}"
+    x-data="new {name_pascal}State()"
     class="bg-white rounded-lg shadow-md p-6"
 >
-    <h3 class="text-xl font-semibold mb-4">{name}</h3>
+    <h3 class="text-xl font-semibold mb-4">{component_name}</h3>
     
     <form @submit.prevent="submit()" class="space-y-4">
         <div>
@@ -641,22 +735,42 @@ Use HTMX for server communication:
         </button>
     </form>
 </div>
+
+<script>
+// {name_pascal}State - Form state and logic
+class {name_pascal}State {{
+    constructor() {{
+        this.formData = {{
+            field: ''
+        }};
+    }}
+    
+    submit() {{
+        // Handle form submission
+        console.log('Form submitted:', this.formData);
+    }}
+}}
+</script>
+{{%- endmacro -%}}
 ''',
-            'list': '''<!-- {name} List Component -->
+            'list': f'''<!-- {component_name} List Component -->
+{{%- macro {name_snake}() -%}}
 <div 
-    x-data="{{
-        items: [],
-        loadItems() {{
-            // Load items from API
-            fetch('/api/{name}')
-                .then(r => r.json())
-                .then(data => this.items = data);
-        }}
-    }}"
+    x-data="new {name_pascal}State()"
     x-init="loadItems()"
+    @htmx:after-request="sync($event.detail.xhr.response)"
     class="bg-white rounded-lg shadow-md p-6"
 >
-    <h3 class="text-xl font-semibold mb-4">{name}</h3>
+    <h3 class="text-xl font-semibold mb-4">{component_name}</h3>
+    
+    <button
+        hx-get="/api/{name_snake}"
+        hx-trigger="click"
+        hx-swap="none"
+        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded mb-4"
+    >
+        Load Items
+    </button>
     
     <ul class="space-y-2">
         <template x-for="item in items" :key="item.id">
@@ -669,23 +783,79 @@ Use HTMX for server communication:
     <div x-show="items.length === 0" class="text-center text-gray-400 py-8">
         No items found.
     </div>
+    
+    <div class="mt-4 text-sm text-gray-600">
+        <p>Total items: <span x-text="itemCount"></span></p>
+    </div>
 </div>
+
+<script>
+// {name_pascal}State - List state and logic
+class {name_pascal}State {{
+    constructor() {{
+        this.items = [];
+    }}
+    
+    loadItems() {{
+        // Can also load items via fetch if needed
+        fetch('/api/{name_snake}')
+            .then(r => r.json())
+            .then(data => this.sync(JSON.stringify(data)));
+    }}
+    
+    // Explicit data sync method called by HTMX
+    sync(jsonData) {{
+        try {{
+            const data = typeof jsonData === 'string' ? JSON.parse(jsonData) : jsonData;
+            this.items = data.items || data || [];
+        }} catch (e) {{
+            console.error('Failed to sync data:', e);
+        }}
+    }}
+    
+    // Computed property using getter
+    get itemCount() {{
+        return this.items.length;
+    }}
+}}
+</script>
+{{%- endmacro -%}}
 ''',
-            'card': '''<!-- {name} Card Component -->
-<div class="bg-white rounded-lg shadow-md overflow-hidden">
+            'card': f'''<!-- {component_name} Card Component -->
+{{%- macro {name_snake}(title='{component_name}', description='Card description goes here.') -%}}
+<div 
+    x-data="new {name_pascal}State('{{{{{{ title }}}}}}', '{{{{{{ description }}}}}}')"
+    class="bg-white rounded-lg shadow-md overflow-hidden"
+>
     <div class="p-6">
-        <h3 class="text-xl font-semibold mb-2">{name}</h3>
-        <p class="text-gray-600 mb-4">
-            Card description goes here.
-        </p>
+        <h3 class="text-xl font-semibold mb-2" x-text="title"></h3>
+        <p class="text-gray-600 mb-4" x-text="description"></p>
         
-        <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
+        <button 
+            @click="handleAction()"
+            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+        >
             Action
         </button>
     </div>
 </div>
+
+<script>
+// {name_pascal}State - Card state and logic
+class {name_pascal}State {{
+    constructor(title, description) {{
+        this.title = title;
+        this.description = description;
+    }}
+    
+    handleAction() {{
+        // Handle button action
+        console.log('Action clicked');
+    }}
+}}
+</script>
+{{%- endmacro -%}}
 '''
         }
         
-        template = templates.get(component_type, templates['basic'])
-        return template.format(name=component_name)
+        return templates.get(component_type, templates['basic'])
