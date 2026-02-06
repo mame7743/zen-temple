@@ -12,9 +12,11 @@ zen-temple follows the **Zero Template** philosophy:
 - **No build step required** - Edit templates and see changes immediately
 - **No hidden abstractions** - What you write is what runs
 - **Template-centered design** - Templates are the source of truth
-- **Logic in Alpine.js** - State management in `x-data` functions only
-- **Server returns JSON/HTML** - Clean separation of concerns
-- **HTMX for communication** - Declarative API calls and events
+- **Jinja Macros for components** - Encapsulate HTML + JavaScript together
+- **Class-based state** - Use `new ComponentState()`, never inline objects
+- **Explicit data flow** - HTMX fetches JSON, passes to Alpine methods
+- **Computed properties via getters** - Use JavaScript `get` accessors
+- **Loose coupling** - Components are independent and self-contained
 
 Inspired by Svelte's reactive design philosophy, but without the build step.
 
@@ -65,73 +67,130 @@ my-app/
 
 ## 📚 Core Concepts
 
-### Components
+### Components as Jinja Macros
 
-Components are simple HTML files with Alpine.js for state management:
+Components are defined as Jinja macros with encapsulated JavaScript classes:
 
 ```html
 <!-- templates/components/counter.html -->
-<div x-data="{ count: 0 }" class="bg-white rounded-lg shadow p-6">
+{%- macro counter(initial_count=0) -%}
+<div 
+    x-data="new CounterState({{ initial_count }})"
+    class="bg-white rounded-lg shadow p-6"
+>
     <h3 class="text-xl font-semibold mb-4">Counter</h3>
-    <div class="flex items-center gap-4">
-        <button @click="count--" class="bg-red-500 text-white px-4 py-2 rounded">-</button>
-        <span class="text-2xl font-bold" x-text="count"></span>
-        <button @click="count++" class="bg-green-500 text-white px-4 py-2 rounded">+</button>
-    </div>
+    <button @click="increment()">+</button>
+    <span x-text="count"></span>
+    <button @click="decrement()">-</button>
 </div>
+
+<script>
+// CounterState - Encapsulated component logic
+class CounterState {
+    constructor(initialCount = 0) {
+        this.count = initialCount;
+    }
+    
+    increment() {
+        this.count++;
+    }
+    
+    decrement() {
+        this.count--;
+    }
+    
+    // Computed property using getter
+    get double() {
+        return this.count * 2;
+    }
+}
+</script>
+{%- endmacro -%}
 ```
 
-Use components in your templates:
+Use components by importing and calling the macro:
 
 ```html
 {% extends "layouts/base.html" %}
+{% from "components/counter.html" import counter %}
 
 {% block content %}
-    {% include "components/counter.html" %}
+    {{ counter(initial_count=5) }}
 {% endblock %}
 ```
 
-### HTMX Integration
+### Class-Based State Management
 
-Use HTMX for server communication:
+All state must be managed through JavaScript classes instantiated with `new`:
+
+- ✅ **Do**: `x-data="new ComponentState()"`
+- ❌ **Don't**: `x-data="{ count: 0 }"` (inline objects)
+- ❌ **Don't**: `Alpine.store()` or `Alpine.data()` (global state)
+
+### HTMX with Explicit Data Flow
+
+HTMX fetches JSON data, which is then explicitly passed to Alpine.js methods:
 
 ```html
-<button 
-    hx-get="/api/data"
-    hx-target="#result"
-    hx-swap="innerHTML"
-    class="bg-blue-500 text-white px-4 py-2 rounded"
+<div 
+    x-data="new DataState()"
+    @htmx:after-request="sync($event.detail.xhr.response)"
 >
-    Load Data
-</button>
-<div id="result"></div>
-```
-
-### Alpine.js State Management
-
-Keep all logic in Alpine.js `x-data` functions:
-
-```html
-<div x-data="{
-    todos: [],
-    newTodo: '',
-    addTodo() {
-        if (this.newTodo.trim()) {
-            this.todos.push({ text: this.newTodo, done: false });
-            this.newTodo = '';
-        }
-    }
-}">
-    <input x-model="newTodo" @keyup.enter="addTodo()" />
-    <button @click="addTodo()">Add</button>
-    
+    <button 
+        hx-get="/api/data"
+        hx-swap="none"
+        class="bg-blue-500 text-white px-4 py-2 rounded"
+    >
+        Load Data
+    </button>
     <ul>
-        <template x-for="todo in todos">
-            <li x-text="todo.text"></li>
+        <template x-for="item in items" :key="item.id">
+            <li x-text="item.name"></li>
         </template>
     </ul>
 </div>
+
+<script>
+class DataState {
+    constructor() {
+        this.items = [];
+    }
+    
+    // Explicit data sync method called by HTMX
+    sync(jsonData) {
+        const data = JSON.parse(jsonData);
+        this.items = data.items || [];
+    }
+}
+</script>
 ```
+
+Server returns JSON (not HTML):
+
+```python
+@app.route('/api/data')
+def get_data():
+    return jsonify({'items': [...]})
+```
+
+### Computed Properties
+
+Use JavaScript getters for computed values:
+
+```javascript
+class TodoState {
+    constructor() {
+        this.todos = [];
+    }
+    
+    // Computed property - automatically reactive in Alpine
+    get completedCount() {
+        return this.todos.filter(t => t.completed).length;
+    }
+}
+```
+
+Access in template: `<span x-text="completedCount"></span>`
 
 ## 🛠️ CLI Commands
 
@@ -283,45 +342,49 @@ All dependencies are loaded from CDN - no build step required!
 
 ## 🎓 Examples
 
-### Counter Component
+### Counter Component with Macro
 
-A simple reactive counter demonstrating Alpine.js state management:
+A reactive counter using Jinja macro and class-based state:
 
 ```html
-<div x-data="{ count: 0 }">
-    <button @click="count--">-</button>
+<!-- templates/components/counter.html -->
+{%- macro counter(initial_count=0) -%}
+<div x-data="new CounterState({{ initial_count }})">
+    <button @click="decrement()">-</button>
     <span x-text="count"></span>
-    <button @click="count++">+</button>
+    <button @click="increment()">+</button>
+    <p>Double: <span x-text="double"></span></p>
 </div>
+
+<script>
+class CounterState {
+    constructor(initialCount = 0) {
+        this.count = initialCount;
+    }
+    
+    increment() { this.count++; }
+    decrement() { this.count--; }
+    
+    get double() { return this.count * 2; }
+}
+</script>
+{%- endmacro -%}
 ```
 
-### Todo List
+Usage:
+```html
+{% from "components/counter.html" import counter %}
+{{ counter(initial_count=5) }}
+```
 
-A todo list with full CRUD operations:
+### Todo List with Class State
+
+A todo list with class-based state management:
 
 ```html
-<div x-data="{
-    todos: [],
-    newTodo: '',
-    addTodo() {
-        if (this.newTodo.trim()) {
-            this.todos.push({
-                id: Date.now(),
-                text: this.newTodo,
-                completed: false
-            });
-            this.newTodo = '';
-        }
-    },
-    toggleTodo(id) {
-        const todo = this.todos.find(t => t.id === id);
-        if (todo) todo.completed = !todo.completed;
-    },
-    removeTodo(id) {
-        this.todos = this.todos.filter(t => t.id !== id);
-    }
-}">
-    <input x-model="newTodo" @keyup.enter="addTodo()" placeholder="Add a todo..." />
+{%- macro todo() -%}
+<div x-data="new TodoState()">
+    <input x-model="newTodo" @keyup.enter="addTodo()" />
     <button @click="addTodo()">Add</button>
     
     <ul>
@@ -333,22 +396,87 @@ A todo list with full CRUD operations:
             </li>
         </template>
     </ul>
+    
+    <p>Completed: <span x-text="completedCount"></span></p>
 </div>
+
+<script>
+class TodoState {
+    constructor() {
+        this.todos = [];
+        this.newTodo = '';
+    }
+    
+    addTodo() {
+        if (this.newTodo.trim()) {
+            this.todos.push({
+                id: Date.now(),
+                text: this.newTodo,
+                completed: false
+            });
+            this.newTodo = '';
+        }
+    }
+    
+    toggleTodo(id) {
+        const todo = this.todos.find(t => t.id === id);
+        if (todo) todo.completed = !todo.completed;
+    }
+    
+    removeTodo(id) {
+        this.todos = this.todos.filter(t => t.id !== id);
+    }
+    
+    get completedCount() {
+        return this.todos.filter(t => t.completed).length;
+    }
+}
+</script>
+{%- endmacro -%}
 ```
 
-### HTMX Data Fetching
+### HTMX Data Fetching with Explicit Flow
 
-Fetch data from the server without JavaScript:
+Fetch JSON data and sync to Alpine class:
 
 ```html
-<button 
-    hx-get="/api/users"
-    hx-target="#users"
-    hx-swap="innerHTML"
+{%- macro data_fetch() -%}
+<div 
+    x-data="new DataState()"
+    @htmx:after-request="sync($event.detail.xhr.response)"
 >
-    Load Users
-</button>
-<div id="users">Click to load users</div>
+    <button hx-get="/api/data" hx-swap="none">
+        Load Data
+    </button>
+    
+    <ul>
+        <template x-for="item in items" :key="item.id">
+            <li x-text="item.name"></li>
+        </template>
+    </ul>
+</div>
+
+<script>
+class DataState {
+    constructor() {
+        this.items = [];
+    }
+    
+    sync(jsonData) {
+        const data = JSON.parse(jsonData);
+        this.items = data.items || [];
+    }
+}
+</script>
+{%- endmacro -%}
+```
+
+Server endpoint:
+```python
+@app.route('/api/data')
+def get_data():
+    return jsonify({'items': [{'id': 1, 'name': 'Item 1'}]})
+```
 ```
 
 ## 🧑‍💻 Development
