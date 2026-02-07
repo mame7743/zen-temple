@@ -22,6 +22,9 @@ class CalculatorLogic(PureLogic):
     It's pure Python that can be tested, reused, and understood independently.
     """
 
+    # Constants
+    DECIMAL_PRECISION = 8  # Number of decimal places for display
+
     def __init__(self):
         """Initialize calculator logic."""
         self._display = "0"
@@ -132,7 +135,7 @@ class CalculatorLogic(PureLogic):
             if result == int(result):
                 self._display = str(int(result))
             else:
-                self._display = str(round(result, 8))
+                self._display = str(round(result, self.DECIMAL_PRECISION))
 
             # Add to history
             operation_str = f"{self._previous_value} {self._operation} {self._current_value} = {result}"
