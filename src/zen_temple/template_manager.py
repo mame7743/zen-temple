@@ -1,4 +1,4 @@
-"""Template Manager for zen-temple components."""
+"""zen-templeコンポーネントのテンプレートマネージャー"""
 
 from pathlib import Path
 from typing import Any, Optional
@@ -10,24 +10,24 @@ from zen_temple.logic_layer import LogicBridge, PureLogic, create_macro_helpers
 
 class TemplateManager:
     """
-    Manages Jinja2 templates for zen-temple components.
+    zen-templeコンポーネントのためのJinja2テンプレート管理
 
-    Follows zen-temple philosophy:
-    - Templates are the source of truth
-    - No build step required
-    - Clear, transparent rendering
-    - Logic is Pure, Bridge is Minimal (via LogicBridge)
+    zen-temple哲学に従います:
+    - テンプレートが真実の源
+    - ビルドステップ不要
+    - クリアで透明なレンダリング
+    - ロジックは純粋、ブリッジは最小限（LogicBridge経由）
     """
 
     def __init__(
         self, template_dirs: Optional[list[Path]] = None, logic_bridge: Optional[LogicBridge] = None
     ):
         """
-        Initialize the template manager.
+        テンプレートマネージャーを初期化
 
-        Args:
-            template_dirs: List of directories to search for templates
-            logic_bridge: Optional logic bridge for connecting pure logic to templates
+        引数:
+            template_dirs: テンプレートを検索するディレクトリのリスト
+            logic_bridge: 純粋ロジックをテンプレートに接続するためのオプションロジックブリッジ
         """
         if template_dirs is None:
             template_dirs = [Path.cwd() / "templates"]
@@ -37,7 +37,7 @@ class TemplateManager:
         self._setup_environment()
 
     def _setup_environment(self) -> None:
-        """Set up the Jinja2 environment with appropriate settings."""
+        """適切な設定でJinja2環境をセットアップ"""
         loader = FileSystemLoader([str(d) for d in self.template_dirs])
         self.env = Environment(
             loader=loader,
@@ -46,16 +46,16 @@ class TemplateManager:
             lstrip_blocks=True,
         )
 
-        # Add custom filters for zen-temple
+        # zen-temple用のカスタムフィルターを追加
         self.env.filters["json_encode"] = self._json_encode_filter
 
-        # Add macro helpers to globals (bridge between logic and templates)
+        # グローバルにマクロヘルパーを追加（ロジックとテンプレート間のブリッジ）
         macro_helpers = create_macro_helpers()
         self.env.globals.update(macro_helpers)
 
     @staticmethod
     def _json_encode_filter(value: Any) -> str:
-        """Filter to safely encode values as JSON for Alpine.js."""
+        """Alpine.js用に値を安全にJSONとしてエンコードするフィルター"""
         import json
 
         from markupsafe import Markup
@@ -70,21 +70,21 @@ class TemplateManager:
         **kwargs: Any,
     ) -> str:
         """
-        Render a component template.
+        コンポーネントテンプレートをレンダリング
 
-        Args:
-            component_name: Name of the component template
-            context: Context dictionary for rendering
-            logic: Optional pure logic instance (follows "Logic is Pure" principle)
-            **kwargs: Additional context variables
+        引数:
+            component_name: コンポーネントテンプレートの名前
+            context: レンダリング用のコンテキスト辞書
+            logic: オプションの純粋ロジックインスタンス（「ロジックは純粋」原則に従う）
+            **kwargs: 追加のコンテキスト変数
 
-        Returns:
-            Rendered HTML string
+        戻り値:
+            レンダリングされたHTML文字列
         """
         if context is None:
             context = {}
 
-        # If logic is provided, prepare context from it (minimal bridge)
+        # ロジックが提供されている場合、それからコンテキストを準備（最小限のブリッジ）
         if logic is not None:
             logic_context = self.logic_bridge.prepare_context(logic, extra_context=context)
             context = logic_context
@@ -96,14 +96,14 @@ class TemplateManager:
 
     def render_string(self, template_string: str, context: Optional[dict[str, Any]] = None) -> str:
         """
-        Render a template from a string.
+        文字列からテンプレートをレンダリング
 
-        Args:
-            template_string: Template string to render
-            context: Context dictionary for rendering
+        引数:
+            template_string: レンダリングするテンプレート文字列
+            context: レンダリング用のコンテキスト辞書
 
-        Returns:
-            Rendered HTML string
+        戻り値:
+            レンダリングされたHTML文字列
         """
         if context is None:
             context = {}
@@ -112,10 +112,10 @@ class TemplateManager:
 
     def add_template_dir(self, template_dir: Path) -> None:
         """
-        Add a new template directory to the search path.
+        新しいテンプレートディレクトリを検索パスに追加
 
-        Args:
-            template_dir: Path to template directory
+        引数:
+            template_dir: テンプレートディレクトリへのパス
         """
         if template_dir not in self.template_dirs:
             self.template_dirs.append(Path(template_dir))
@@ -123,10 +123,10 @@ class TemplateManager:
 
     def list_components(self) -> list[str]:
         """
-        List all available component templates.
+        利用可能な全コンポーネントテンプレートを一覧表示
 
-        Returns:
-            List of component names (without .html extension)
+        戻り値:
+            コンポーネント名のリスト（.html拡張子なし）
         """
         components = []
         for template_dir in self.template_dirs:
@@ -139,13 +139,13 @@ class TemplateManager:
 
     def component_exists(self, component_name: str) -> bool:
         """
-        Check if a component template exists.
+        コンポーネントテンプレートが存在するかチェック
 
-        Args:
-            component_name: Name of the component
+        引数:
+            component_name: コンポーネントの名前
 
-        Returns:
-            True if component exists, False otherwise
+        戻り値:
+            コンポーネントが存在する場合はTrue、そうでない場合はFalse
         """
         try:
             self.env.get_template(f"{component_name}.html")

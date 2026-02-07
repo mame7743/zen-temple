@@ -1,14 +1,14 @@
 """
-Pure Logic Layer for zen-temple components.
+zen-templeコンポーネントのための純粋ロジックレイヤー
 
-This module implements the "Logic is Pure, Bridge is Minimal" design principle.
-All business logic should be in vanilla Python classes, with Jinja macros serving
-as the minimal bridge to templates.
+このモジュールは「ロジックは純粋、ブリッジは最小限」の設計原則を実装します。
+全てのビジネスロジックはバニラPythonクラスに記述し、Jinjaマクロが
+テンプレートへの最小限のブリッジとして機能します。
 
-Design Principles:
-1. Vanilla Class Isolation: Logic is pure Python, no framework dependencies
-2. Minimal Bridge: Jinja macros connect logic to templates
-3. Zero Legacy: Clean separation between logic and presentation
+設計原則:
+1. バニラクラス分離: ロジックは純粋なPythonで、フレームワーク依存なし
+2. 最小限のブリッジ: Jinjaマクロがロジックとテンプレートを接続
+3. ゼロレガシー: ロジックとプレゼンテーションのクリーンな分離
 """
 
 from abc import ABC, abstractmethod
@@ -18,13 +18,13 @@ from typing import Any, Optional
 
 class PureLogic(ABC):
     """
-    Base class for pure business logic.
+    純粋ビジネスロジックのための基底クラス
 
-    All business logic should extend this class and remain framework-independent.
-    Logic classes should contain only pure Python code with no dependencies on
-    web frameworks, template engines, or UI libraries.
+    全てのビジネスロジックはこのクラスを継承し、フレームワーク非依存を保つべきです。
+    ロジッククラスは、Webフレームワーク、テンプレートエンジン、UIライブラリへの依存なしの
+    純粋なPythonコードのみを含むべきです。
 
-    Example:
+    例:
         class CounterLogic(PureLogic):
             def __init__(self, initial_value: int = 0):
                 self.value = initial_value
@@ -44,10 +44,10 @@ class PureLogic(ABC):
     @abstractmethod
     def to_context(self) -> dict[str, Any]:
         """
-        Convert logic state to template context.
+        ロジック状態をテンプレートコンテキストに変換
 
-        Returns:
-            Dictionary of variables to pass to template
+        戻り値:
+            テンプレートに渡す変数の辞書
         """
         pass
 
@@ -55,12 +55,12 @@ class PureLogic(ABC):
 @dataclass
 class ComponentState:
     """
-    Immutable state container for components.
+    コンポーネントのためのイミュータブル状態コンテナ
 
-    Use dataclass for type safety and automatic serialization.
-    All state should be JSON-serializable for Alpine.js compatibility.
+    型安全性と自動シリアライゼーションのためにdataclassを使用します。
+    全ての状態はAlpine.js互換性のためにJSONシリアライズ可能である必要があります。
 
-    Example:
+    例:
         @dataclass
         class TodoState(ComponentState):
             todos: List[Dict[str, Any]]
@@ -68,35 +68,35 @@ class ComponentState:
     """
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert state to dictionary."""
+        """状態を辞書に変換"""
         return asdict(self)
 
 
 class LogicBridge:
     """
-    Minimal bridge between pure logic and templates.
+    純粋ロジックとテンプレート間の最小限のブリッジ
 
-    This class provides utilities to connect vanilla Python logic classes
-    with Jinja2 templates using macros as the interface layer.
+    このクラスは、バニラPythonロジッククラスをJinja2テンプレートと接続するための
+    ユーティリティを提供し、マクロをインターフェースレイヤーとして使用します。
 
-    Example:
+    例:
         bridge = LogicBridge()
         counter_logic = CounterLogic(initial_value=0)
         context = bridge.prepare_context(counter_logic)
-        # Use context in template rendering
+        # テンプレートレンダリングでコンテキストを使用
     """
 
     def __init__(self):
-        """Initialize the logic bridge."""
+        """ロジックブリッジを初期化"""
         self._logic_registry: dict[str, type] = {}
 
     def register_logic(self, name: str, logic_class: type) -> None:
         """
-        Register a logic class.
+        ロジッククラスを登録
 
-        Args:
-            name: Name to register the logic class under
-            logic_class: The logic class to register
+        引数:
+            name: ロジッククラスを登録する名前
+            logic_class: 登録するロジッククラス
         """
         self._logic_registry[name] = logic_class
 
@@ -104,14 +104,14 @@ class LogicBridge:
         self, logic: PureLogic, extra_context: Optional[dict[str, Any]] = None
     ) -> dict[str, Any]:
         """
-        Prepare template context from logic instance.
+        ロジックインスタンスからテンプレートコンテキストを準備
 
-        Args:
-            logic: Pure logic instance
-            extra_context: Additional context variables
+        引数:
+            logic: 純粋ロジックインスタンス
+            extra_context: 追加のコンテキスト変数
 
-        Returns:
-            Complete context dictionary for template rendering
+        戻り値:
+            テンプレートレンダリング用の完全なコンテキスト辞書
         """
         context = logic.to_context()
 
@@ -122,14 +122,14 @@ class LogicBridge:
 
     def create_logic(self, name: str, **kwargs: Any) -> Optional[PureLogic]:
         """
-        Create a logic instance by name.
+        名前でロジックインスタンスを作成
 
-        Args:
-            name: Registered name of the logic class
-            **kwargs: Arguments to pass to logic constructor
+        引数:
+            name: ロジッククラスの登録名
+            **kwargs: ロジックコンストラクタに渡す引数
 
-        Returns:
-            Logic instance or None if not found
+        戻り値:
+            ロジックインスタンス、または見つからない場合はNone
         """
         logic_class = self._logic_registry.get(name)
         if logic_class is None:
@@ -140,53 +140,53 @@ class LogicBridge:
 
 class ComponentLogic(PureLogic):
     """
-    Base class for component business logic.
+    コンポーネントビジネスロジックの基底クラス
 
-    Provides common functionality for component-level logic.
-    Components should extend this class for reusable logic patterns.
+    コンポーネントレベルのロジックのための共通機能を提供します。
+    再利用可能なロジックパターンのために、コンポーネントはこのクラスを継承すべきです。
     """
 
     def __init__(self, component_id: Optional[str] = None):
         """
-        Initialize component logic.
+        コンポーネントロジックを初期化
 
-        Args:
-            component_id: Optional unique identifier for the component
+        引数:
+            component_id: コンポーネントのオプション一意識別子
         """
         self.component_id = component_id or self._generate_id()
 
     def _generate_id(self) -> str:
-        """Generate a unique component ID."""
+        """一意のコンポーネントIDを生成"""
         import uuid
 
         return f"component-{uuid.uuid4().hex[:8]}"
 
     def to_context(self) -> dict[str, Any]:
         """
-        Default context includes component ID.
+        デフォルトコンテキストにはコンポーネントIDが含まれます
 
-        Override this method to add more context.
+        より多くのコンテキストを追加するには、このメソッドをオーバーライドします。
         """
         return {"component_id": self.component_id}
 
 
 def create_macro_helpers() -> dict[str, Any]:
     """
-    Create helper functions for use in Jinja macros.
+    Jinjaマクロで使用するヘルパー関数を作成
 
-    These helpers serve as the minimal bridge between Python logic
-    and template macros.
+    これらのヘルパーは、Pythonロジックとテンプレートマクロ間の
+    最小限のブリッジとして機能します。
 
-    Returns:
-        Dictionary of helper functions for Jinja environment
+    戻り値:
+        Jinja環境用のヘルパー関数の辞書
     """
 
     def prepare_alpine_data(logic: PureLogic) -> dict[str, Any]:
-        """Prepare logic context for Alpine.js x-data."""
+        """Alpine.js x-data用のロジックコンテキストを準備"""
         return logic.to_context()
 
     def serialize_state(state: ComponentState) -> dict[str, Any]:
-        """Serialize component state for templates."""
+        """テンプレート用にコンポーネント状態をシリアライズ"""
         return state.to_dict()
 
     return {

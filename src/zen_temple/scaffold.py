@@ -1,4 +1,4 @@
-"""Scaffold generator for zen-temple projects."""
+"""zen-templeプロジェクトのスキャフォールドジェネレータ"""
 
 from pathlib import Path
 from typing import Optional
@@ -8,21 +8,21 @@ import yaml
 
 class ScaffoldGenerator:
     """
-    Generates project scaffolding for zen-temple applications.
+    zen-templeアプリケーション用のプロジェクトスキャフォールドを生成
 
-    Creates:
-    - Project structure
-    - Configuration files
-    - Example components
-    - Base templates
+    作成するもの:
+    - プロジェクト構造
+    - 設定ファイル
+    - サンプルコンポーネント
+    - ベーステンプレート
     """
 
     def __init__(self, project_root: Optional[Path] = None):
         """
-        Initialize the scaffold generator.
+        スキャフォールドジェネレータを初期化
 
-        Args:
-            project_root: Root directory for the project (defaults to cwd)
+        引数:
+            project_root: プロジェクトのルートディレクトリ（デフォルトはcwd）
         """
         self.project_root = project_root or Path.cwd()
 
@@ -30,20 +30,20 @@ class ScaffoldGenerator:
         self, project_name: str, include_examples: bool = True, include_server: bool = False
     ) -> dict[str, Path]:
         """
-        Generate a complete project structure.
+        完全なプロジェクト構造を生成
 
-        Args:
-            project_name: Name of the project
-            include_examples: Whether to include example components
-            include_server: Whether to include a basic Flask server
+        引数:
+            project_name: プロジェクトの名前
+            include_examples: サンプルコンポーネントを含めるか
+            include_server: 基本的なFlaskサーバーを含めるか
 
-        Returns:
-            Dictionary mapping structure names to created paths
+        戻り値:
+            構造名と作成されたパスをマッピングする辞書
         """
         project_path = self.project_root / project_name
         created_paths = {}
 
-        # Create directory structure
+        # ディレクトリ構造を作成
         directories = [
             project_path / "templates",
             project_path / "templates/components",
@@ -65,25 +65,25 @@ class ScaffoldGenerator:
             directory.mkdir(parents=True, exist_ok=True)
             created_paths[str(directory.relative_to(project_path))] = directory
 
-        # Generate configuration file
+        # 設定ファイルを生成
         config_file = self._create_config_file(project_path, project_name)
         created_paths["zen-temple.yaml"] = config_file
 
-        # Generate base layout
+        # ベースレイアウトを生成
         base_layout = self._create_base_layout(project_path)
         created_paths["templates/layouts/base.html"] = base_layout
 
-        # Generate example components if requested
+        # リクエストされた場合はサンプルコンポーネントを生成
         if include_examples:
             example_paths = self._create_example_components(project_path)
             created_paths.update(example_paths)
 
-        # Generate server files if requested
+        # リクエストされた場合はサーバーファイルを生成
         if include_server:
             server_paths = self._create_server_files(project_path, project_name)
             created_paths.update(server_paths)
 
-        # Create README
+        # READMEを作成
         readme = self._create_readme(project_path, project_name, include_server)
         created_paths["README.md"] = readme
 
@@ -93,15 +93,15 @@ class ScaffoldGenerator:
         self, component_name: str, component_type: str = "basic", output_dir: Optional[Path] = None
     ) -> Path:
         """
-        Generate a component template.
+        コンポーネントテンプレートを生成
 
-        Args:
-            component_name: Name of the component
-            component_type: Type of component (basic, form, list, card)
-            output_dir: Directory to create component in
+        引数:
+            component_name: コンポーネントの名前
+            component_type: コンポーネントのタイプ（basic、form、list、card）
+            output_dir: コンポーネントを作成するディレクトリ
 
-        Returns:
-            Path to created component file
+        戻り値:
+            作成されたコンポーネントファイルへのパス
         """
         if output_dir is None:
             output_dir = self.project_root / "templates/components"
@@ -115,7 +115,7 @@ class ScaffoldGenerator:
         return component_path
 
     def _create_config_file(self, project_path: Path, project_name: str) -> Path:
-        """Create zen-temple configuration file."""
+        """zen-temple設定ファイルを作成"""
         config = {
             "project": {
                 "name": project_name,
@@ -148,7 +148,7 @@ class ScaffoldGenerator:
         return config_path
 
     def _create_base_layout(self, project_path: Path) -> Path:
-        """Create base HTML layout with HTMX, Alpine.js, and Tailwind."""
+        """HTMX、Alpine.js、Tailwindを含むベースHTMLレイアウトを作成"""
         layout_content = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -185,16 +185,16 @@ class ScaffoldGenerator:
         return layout_path
 
     def _create_example_components(self, project_path: Path) -> dict[str, Path]:
-        """Create example components demonstrating zen-temple philosophy."""
+        """zen-temple哲学を示すサンプルコンポーネントを作成"""
         components = {}
 
-        # Counter component (Alpine.js reactive example)
-        counter_content = """<!-- Counter Component - Demonstrates Alpine.js state management -->
+        # カウンターコンポーネント（Alpine.jsリアクティブの例）
+        counter_content = """<!-- カウンターコンポーネント - Alpine.js状態管理のデモ -->
 <div
     x-data="{ count: 0 }"
     class="bg-white rounded-lg shadow-md p-6 max-w-md"
 >
-    <h3 class="text-xl font-semibold mb-4">Counter</h3>
+    <h3 class="text-xl font-semibold mb-4">カウンター</h3>
 
     <div class="flex items-center justify-between mb-4">
         <button
@@ -218,7 +218,7 @@ class ScaffoldGenerator:
         @click="count = 0"
         class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
     >
-        Reset
+        リセット
     </button>
 </div>
 """
@@ -226,8 +226,8 @@ class ScaffoldGenerator:
         counter_path.write_text(counter_content)
         components["templates/components/counter.html"] = counter_path
 
-        # Todo list component (HTMX + Alpine.js example)
-        todo_content = """<!-- Todo List Component - Demonstrates HTMX + Alpine.js integration -->
+        # Todoリストコンポーネント（HTMX + Alpine.jsの例）
+        todo_content = """<!-- Todoリストコンポーネント - HTMX + Alpine.js統合のデモ -->
 <div
     x-data="{
         todos: [],
@@ -252,26 +252,26 @@ class ScaffoldGenerator:
     }"
     class="bg-white rounded-lg shadow-md p-6 max-w-2xl"
 >
-    <h3 class="text-xl font-semibold mb-4">Todo List</h3>
+    <h3 class="text-xl font-semibold mb-4">Todoリスト</h3>
 
-    <!-- Add todo form -->
+    <!-- Todo追加フォーム -->
     <div class="flex gap-2 mb-4">
         <input
             type="text"
             x-model="newTodo"
             @keyup.enter="addTodo()"
-            placeholder="Add a new todo..."
+            placeholder="新しいTodoを追加..."
             class="flex-1 px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
             @click="addTodo()"
             class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
         >
-            Add
+            追加
         </button>
     </div>
 
-    <!-- Todo list -->
+    <!-- Todoリスト -->
     <ul class="space-y-2">
         <template x-for="todo in todos" :key="todo.id">
             <li class="flex items-center gap-2 p-3 bg-gray-50 rounded">
@@ -290,14 +290,14 @@ class ScaffoldGenerator:
                     @click="removeTodo(todo.id)"
                     class="text-red-500 hover:text-red-700"
                 >
-                    Delete
+                    削除
                 </button>
             </li>
         </template>
     </ul>
 
     <div x-show="todos.length === 0" class="text-center text-gray-400 py-8">
-        No todos yet. Add one above!
+        まだTodoがありません。上で追加してください！
     </div>
 </div>
 """
@@ -305,10 +305,10 @@ class ScaffoldGenerator:
         todo_path.write_text(todo_content)
         components["templates/components/todo.html"] = todo_path
 
-        # Data fetch component (HTMX example)
-        fetch_content = """<!-- Data Fetch Component - Demonstrates HTMX for API communication -->
+        # データフェッチコンポーネント（HTMXの例）
+        fetch_content = """<!-- データフェッチコンポーネント - API通信のためのHTMXのデモ -->
 <div class="bg-white rounded-lg shadow-md p-6 max-w-2xl">
-    <h3 class="text-xl font-semibold mb-4">Data Fetcher</h3>
+    <h3 class="text-xl font-semibold mb-4">データフェッチャー</h3>
 
     <button
         hx-get="/api/data"
@@ -317,29 +317,29 @@ class ScaffoldGenerator:
         hx-swap="innerHTML"
         class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded mb-4"
     >
-        Load Data
+        データを読み込む
     </button>
 
     <div
         id="data-container"
         class="p-4 bg-gray-50 rounded min-h-[100px]"
     >
-        Click the button to load data from the server.
+        ボタンをクリックしてサーバーからデータを読み込みます。
     </div>
 </div>
 
-<!-- Example response template (server would return this) -->
+<!-- サンプルレスポンステンプレート（サーバーが返すもの） -->
 {% raw %}
 <!--
 <div class="space-y-2">
     <div class="p-3 bg-white rounded border">
-        <strong>Item 1:</strong> Data loaded from server
+        <strong>項目1:</strong> サーバーから読み込まれたデータ
     </div>
     <div class="p-3 bg-white rounded border">
-        <strong>Item 2:</strong> HTMX handles the communication
+        <strong>項目2:</strong> HTMXが通信を処理
     </div>
     <div class="p-3 bg-white rounded border">
-        <strong>Item 3:</strong> Server returns HTML fragments
+        <strong>項目3:</strong> サーバーはHTMLフラグメントを返す
     </div>
 </div>
 -->
@@ -349,20 +349,20 @@ class ScaffoldGenerator:
         fetch_path.write_text(fetch_content)
         components["templates/components/data_fetch.html"] = fetch_path
 
-        # Example index page
+        # サンプルインデックスページ
         index_content = """{% extends "layouts/base.html" %}
 
-{% block title %}zen-temple Examples{% endblock %}
+{% block title %}zen-temple サンプル{% endblock %}
 
 {% block content %}
 <div class="space-y-8">
     <header class="text-center mb-12">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">zen-temple</h1>
-        <p class="text-lg text-gray-600">Zero-build, zero-magic frontend components</p>
+        <p class="text-lg text-gray-600">ゼロビルド、マジックなしのフロントエンドコンポーネント</p>
     </header>
 
     <section class="space-y-6">
-        <h2 class="text-2xl font-semibold text-gray-700">Example Components</h2>
+        <h2 class="text-2xl font-semibold text-gray-700">サンプルコンポーネント</h2>
 
         <div class="grid md:grid-cols-2 gap-6">
             <div>
@@ -380,8 +380,8 @@ class ScaffoldGenerator:
     </section>
 
     <footer class="text-center text-gray-500 mt-12 pt-8 border-t">
-        <p>Built with HTMX, Alpine.js, Jinja2, and Tailwind CSS</p>
-        <p class="text-sm mt-2">No build step • No hidden magic • Template-centered</p>
+        <p>HTMX、Alpine.js、Jinja2、Tailwind CSSで構築</p>
+        <p class="text-sm mt-2">ビルドステップなし • 隠されたマジックなし • テンプレート中心</p>
     </footer>
 </div>
 {% endblock %}
@@ -393,12 +393,12 @@ class ScaffoldGenerator:
         return components
 
     def _create_server_files(self, project_path: Path, project_name: str) -> dict[str, Path]:
-        """Create basic Flask server files."""
+        """基本的なFlaskサーバーファイルを作成"""
         files = {}
 
-        # Main app file
+        # メインアプリファイル
         app_content = f'''"""
-Main application entry point for {project_name}.
+{project_name}のメインアプリケーションエントリーポイント
 """
 
 from flask import Flask, render_template, jsonify
@@ -413,28 +413,28 @@ app = Flask(
 
 @app.route('/')
 def index():
-    """Render the main page."""
+    """メインページをレンダリング"""
     return render_template('index.html')
 
 
 @app.route('/api/data')
 def get_data():
     """
-    Example API endpoint that returns HTML fragments for HTMX.
+    HTMX用のHTMLフラグメントを返すサンプルAPIエンドポイント
 
-    Following zen-temple philosophy:
-    - Server returns HTML fragments (not JSON for UI updates)
-    - HTMX handles the communication
-    - No JavaScript needed for this interaction
+    zen-temple哲学に従う:
+    - サーバーはHTMLフラグメントを返す（UI更新用のJSONではない）
+    - HTMXが通信を処理
+    - このインタラクションにJavaScriptは不要
     """
-    # In production, this would fetch real data
+    # 本番環境では実際のデータを取得
     items = [
-        {{'id': 1, 'title': 'Item 1', 'description': 'Data loaded from server'}},
-        {{'id': 2, 'title': 'Item 2', 'description': 'HTMX handles the communication'}},
-        {{'id': 3, 'title': 'Item 3', 'description': 'Server returns HTML fragments'}},
+        {{'id': 1, 'title': '項目1', 'description': 'サーバーから読み込まれたデータ'}},
+        {{'id': 2, 'title': '項目2', 'description': 'HTMXが通信を処理'}},
+        {{'id': 3, 'title': '項目3', 'description': 'サーバーはHTMLフラグメントを返す'}},
     ]
 
-    # Return HTML fragment directly
+    # HTMLフラグメントを直接返す
     html = '<div class="space-y-2">'
     for item in items:
         html += '<div class="p-3 bg-white rounded border">'
@@ -448,16 +448,16 @@ def get_data():
 @app.route('/api/json-example')
 def get_json_example():
     """
-    Example of returning JSON for Alpine.js to consume.
+    Alpine.jsが利用するJSONを返す例
 
-    Use this pattern when you need Alpine.js to handle the data
-    rather than replacing HTML directly.
+    Alpine.jsにデータを処理させたい場合は、
+    HTMLを直接置き換えるのではなく、このパターンを使用します。
     """
     return jsonify({{
         'status': 'success',
         'data': [
-            {{'id': 1, 'name': 'Example 1'}},
-            {{'id': 2, 'name': 'Example 2'}},
+            {{'id': 1, 'name': '例1'}},
+            {{'id': 2, 'name': '例2'}},
         ]
     }})
 
@@ -470,8 +470,8 @@ if __name__ == '__main__':
         app_path.write_text(app_content)
         files["app/main.py"] = app_path
 
-        # .env file
-        env_content = """# Flask configuration
+        # .envファイル
+        env_content = """# Flask設定
 FLASK_APP=app/main.py
 FLASK_ENV=development
 FLASK_DEBUG=1
@@ -480,7 +480,7 @@ FLASK_DEBUG=1
         env_path.write_text(env_content)
         files[".env"] = env_path
 
-        # requirements file
+        # requirementsファイル
         requirements_content = """flask>=3.0.0
 python-dotenv>=1.0.0
 jinja2>=3.1.0
@@ -492,79 +492,79 @@ jinja2>=3.1.0
         return files
 
     def _create_readme(self, project_path: Path, project_name: str, include_server: bool) -> Path:
-        """Create project README."""
+        """プロジェクトREADMEを作成"""
         server_section = ""
         if include_server:
             server_section = """
-## Running the Development Server
+## 開発サーバーの起動
 
 ```bash
-# Install dependencies
+# 依存関係をインストール
 pip install -r requirements.txt
 
-# Run the server
+# サーバーを起動
 python app/main.py
 ```
 
-Then open http://localhost:5000 in your browser.
+その後、ブラウザで http://localhost:5000 を開きます。
 """
 
         readme_content = f"""# {project_name}
 
-A zen-temple project - zero-build, zero-magic frontend components.
+zen-templeプロジェクト - ゼロビルド、マジックなしのフロントエンドコンポーネント
 
-## Philosophy
+## 哲学
 
-This project follows the zen-temple philosophy:
+このプロジェクトはzen-temple哲学に従います:
 
-- **No build step required**: Edit templates and see changes immediately
-- **No hidden abstractions**: What you see is what you get
-- **Template-centered design**: Templates are the source of truth
-- **Logic in Alpine.js**: State management in x-data functions
-- **Server returns JSON/HTML**: Clean separation of concerns
-- **HTMX for communication**: Simple, declarative API calls
+- **ビルドステップ不要**: テンプレートを編集して即座に変更を確認
+- **隠された抽象化なし**: 見たものがそのまま得られる
+- **テンプレート中心設計**: テンプレートが真実の源
+- **Alpine.jsでのロジック**: x-data関数での状態管理
+- **サーバーはJSON/HTMLを返す**: 関心の明確な分離
+- **通信にはHTMX**: シンプルで宣言的なAPI呼び出し
 
-## Project Structure
+## プロジェクト構造
 
 ```
 {project_name}/
 ├── templates/
 │   ├── layouts/
-│   │   └── base.html          # Base layout with CDN imports
+│   │   └── base.html          # CDNインポート付きベースレイアウト
 │   ├── components/
-│   │   ├── counter.html       # Example: Alpine.js reactivity
-│   │   ├── todo.html          # Example: State management
-│   │   └── data_fetch.html    # Example: HTMX communication
-│   └── index.html             # Main page
+│   │   ├── counter.html       # 例: Alpine.jsリアクティビティ
+│   │   ├── todo.html          # 例: 状態管理
+│   │   └── data_fetch.html    # 例: HTMX通信
+│   └── index.html             # メインページ
 ├── static/
-│   ├── css/                   # Custom styles (if needed)
-│   └── js/                    # Custom Alpine.js stores (if needed)
+│   ├── css/                   # カスタムスタイル（必要に応じて）
+│   └── js/                    # カスタムAlpine.jsストア（必要に応じて）
 {"├── app/" if include_server else ""}
-{"│   └── main.py               # Flask application" if include_server else ""}
-└── zen-temple.yaml            # Project configuration
+{"│   └── main.py               # Flaskアプリケーション" if include_server else ""}
+└── zen-temple.yaml            # プロジェクト設定
 ```
 {server_section}
-## Technology Stack
+## 技術スタック
 
-- **HTMX**: For AJAX, WebSockets, and Server-Sent Events
-- **Alpine.js**: For reactive and declarative JavaScript
-- **Jinja2**: For template rendering
-- **Tailwind CSS**: For styling (via CDN)
+- **HTMX**: AJAX、WebSocket、Server-Sent Events用
+- **Alpine.js**: リアクティブで宣言的なJavaScript
+- **Jinja2**: テンプレートレンダリング
+- **Tailwind CSS**: スタイリング（CDN経由）
 
-## Creating Components
+## コンポーネントの作成
 
-Components are simple HTML files with Alpine.js for interactivity:
+コンポーネントはインタラクティビティ用のAlpine.jsを使用したシンプルなHTMLファイルです:
 
 ```html
 <div x-data="{{ count: 0 }}">
-    <button @click="count++">Increment</button>
+    <button @click="count++">インクリメント</button>
     <span x-text="count"></span>
 </div>
 ```
 
-## HTMX Integration
+## HTMX統合
 
-Use HTMX for server communication:
+サーバー通信にHTMXを使用:
 
 ```html
 <button
@@ -572,30 +572,30 @@ Use HTMX for server communication:
     hx-target="#result"
     hx-swap="innerHTML"
 >
-    Load Data
+    データを読み込む
 </button>
 <div id="result"></div>
 ```
 
-## Learn More
+## 詳細情報
 
-- [HTMX Documentation](https://htmx.org/)
-- [Alpine.js Documentation](https://alpinejs.dev/)
-- [Jinja2 Documentation](https://jinja.palletsprojects.com/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/)
+- [HTMXドキュメント](https://htmx.org/)
+- [Alpine.jsドキュメント](https://alpinejs.dev/)
+- [Jinja2ドキュメント](https://jinja.palletsprojects.com/)
+- [Tailwind CSSドキュメント](https://tailwindcss.com/)
 """
         readme_path = project_path / "README.md"
         readme_path.write_text(readme_content)
         return readme_path
 
     def _get_component_template(self, component_name: str, component_type: str) -> str:
-        """Get template content for a component type."""
+        """コンポーネントタイプ用のテンプレート内容を取得"""
         templates = {
-            "basic": """<!-- {name} Component -->
+            "basic": """<!-- {name}コンポーネント -->
 <div
     x-data="{{
-        // Component state goes here
-        message: 'Hello from {name}!'
+        // コンポーネント状態をここに記述
+        message: '{name}からこんにちは！'
     }}"
     class="bg-white rounded-lg shadow-md p-6"
 >
@@ -603,15 +603,15 @@ Use HTMX for server communication:
     <p x-text="message"></p>
 </div>
 """,
-            "form": """<!-- {name} Form Component -->
+            "form": """<!-- {name}フォームコンポーネント -->
 <div
     x-data="{{
         formData: {{
-            // Form fields
+            // フォームフィールド
         }},
         submit() {{
-            // Handle form submission
-            console.log('Form submitted:', this.formData);
+            // フォーム送信を処理
+            console.log('フォーム送信:', this.formData);
         }}
     }}"
     class="bg-white rounded-lg shadow-md p-6"
@@ -621,7 +621,7 @@ Use HTMX for server communication:
     <form @submit.prevent="submit()" class="space-y-4">
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
-                Field Name
+                フィールド名
             </label>
             <input
                 type="text"
@@ -634,17 +634,17 @@ Use HTMX for server communication:
             type="submit"
             class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded"
         >
-            Submit
+            送信
         </button>
     </form>
 </div>
 """,
-            "list": """<!-- {name} List Component -->
+            "list": """<!-- {name}リストコンポーネント -->
 <div
     x-data="{{
         items: [],
         loadItems() {{
-            // Load items from API
+            // APIから項目を読み込む
             fetch('/api/{name}')
                 .then(r => r.json())
                 .then(data => this.items = data);
@@ -664,20 +664,20 @@ Use HTMX for server communication:
     </ul>
 
     <div x-show="items.length === 0" class="text-center text-gray-400 py-8">
-        No items found.
+        項目が見つかりませんでした。
     </div>
 </div>
 """,
-            "card": """<!-- {name} Card Component -->
+            "card": """<!-- {name}カードコンポーネント -->
 <div class="bg-white rounded-lg shadow-md overflow-hidden">
     <div class="p-6">
         <h3 class="text-xl font-semibold mb-2">{name}</h3>
         <p class="text-gray-600 mb-4">
-            Card description goes here.
+            カードの説明をここに記述します。
         </p>
 
         <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded">
-            Action
+            アクション
         </button>
     </div>
 </div>
