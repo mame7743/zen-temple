@@ -1,0 +1,59 @@
+{% extends "layouts/base.html" %}
+{% from "components/calculator.html" import calculator %}
+
+{% block title %}Calculator Example - zen-temple{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold text-gray-900 mb-2">zen-temple 電卓サンプル</h1>
+    <p class="text-gray-600 mb-8">
+        Zero-build, zero-magic calculator implementation using zen-temple architecture
+    </p>
+    
+    <!-- Calculator Component -->
+    {{ calculator() }}
+    
+    <!-- Explanation -->
+    <div class="mt-8 bg-blue-50 rounded-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">🏛️ Architecture</h2>
+        <div class="space-y-4 text-gray-700">
+            <div>
+                <h3 class="font-semibold text-gray-900">1. Pure Logic Layer (Python)</h3>
+                <p class="text-sm">
+                    <code class="bg-gray-100 px-2 py-1 rounded">examples/calculator_logic.py</code> 
+                    contains pure business logic with no framework dependencies.
+                </p>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-900">2. Minimal Bridge (Jinja Macro)</h3>
+                <p class="text-sm">
+                    <code class="bg-gray-100 px-2 py-1 rounded">templates/components/calculator.html</code> 
+                    defines the component as a reusable Jinja macro.
+                </p>
+            </div>
+            <div>
+                <h3 class="font-semibold text-gray-900">3. Class-based State (Alpine.js)</h3>
+                <p class="text-sm">
+                    <code class="bg-gray-100 px-2 py-1 rounded">CalculatorState</code> 
+                    class encapsulates all frontend logic and state management.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Features -->
+    <div class="mt-6 bg-green-50 rounded-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-4">✨ Features</h2>
+        <ul class="space-y-2 text-gray-700">
+            <li>✅ Basic arithmetic operations (+, −, ×, ÷)</li>
+            <li>✅ Decimal number support</li>
+            <li>✅ Calculation history tracking</li>
+            <li>✅ Error handling (division by zero)</li>
+            <li>✅ Chained operations</li>
+            <li>✅ Clear (C) and Clear Entry (CE) functions</li>
+            <li>✅ Pure Python logic that can be tested independently</li>
+            <li>✅ Zero build step - just edit and reload</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

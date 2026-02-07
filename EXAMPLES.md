@@ -70,6 +70,247 @@ class CounterState {
 {%- endmacro -%}
 ```
 
+## Calculator Component (電卓)
+
+A full-featured calculator demonstrating the complete zen-temple architecture with Pure Logic Layer, Minimal Bridge, and Zero Legacy principles:
+
+### Features
+
+- ✅ Basic arithmetic operations (+, −, ×, ÷)
+- ✅ Decimal number support
+- ✅ Calculation history tracking
+- ✅ Error handling (division by zero)
+- ✅ Chained operations
+- ✅ Clear (C) and Clear Entry (CE) functions
+- ✅ Pure Python logic for backend testing
+- ✅ Zero build step - just edit and reload
+
+### Pure Logic Layer (Python)
+
+The calculator logic is implemented as pure Python with no framework dependencies:
+
+```python
+# examples/calculator_logic.py
+from zen_temple import PureLogic
+
+class CalculatorLogic(PureLogic):
+    """Pure business logic for calculator - no framework dependencies."""
+    
+    def __init__(self):
+        self._display = "0"
+        self._current_value = 0.0
+        self._previous_value = 0.0
+        self._operation = None
+        self._new_number = True
+        self._history = []
+    
+    def input_digit(self, digit: str) -> str:
+        """Input a digit (0-9)."""
+        if self._new_number:
+            self._display = digit
+            self._new_number = False
+        else:
+            if self._display == "0":
+                self._display = digit
+            else:
+                self._display += digit
+        return self._display
+    
+    def input_operation(self, operation: str) -> str:
+        """Input an operation (+, -, *, /)."""
+        if self._operation and not self._new_number:
+            self.calculate()
+        self._previous_value = float(self._display)
+        self._operation = operation
+        self._new_number = True
+        return self._display
+    
+    def calculate(self) -> str:
+        """Calculate the result of pending operation."""
+        if not self._operation:
+            return self._display
+        
+        self._current_value = float(self._display)
+        
+        if self._operation == "+":
+            result = self._previous_value + self._current_value
+        elif self._operation == "-":
+            result = self._previous_value - self._current_value
+        elif self._operation == "*":
+            result = self._previous_value * self._current_value
+        elif self._operation == "/":
+            if self._current_value == 0:
+                self._display = "Error"
+                self._operation = None
+                self._new_number = True
+                return self._display
+            result = self._previous_value / self._current_value
+        
+        # Format and store result
+        self._display = str(int(result)) if result == int(result) else str(round(result, 8))
+        self._history.append(f"{self._previous_value} {self._operation} {self._current_value} = {result}")
+        self._operation = None
+        self._new_number = True
+        
+        return self._display
+    
+    def to_context(self) -> dict:
+        """Minimal bridge to templates."""
+        return {
+            "display": self._display,
+            "has_operation": self._operation is not None,
+            "operation": self._operation or "",
+            "history_count": len(self._history),
+        }
+```
+
+### Frontend Component (Jinja Macro + Alpine.js)
+
+The calculator UI is defined as a reusable Jinja macro with Alpine.js state management:
+
+```html
+<!-- examples/templates/components/calculator.html -->
+{%- macro calculator() -%}
+<div x-data="new CalculatorState()" class="bg-white rounded-xl shadow-lg p-6">
+    <h3 class="text-2xl font-bold mb-4">電卓 (Calculator)</h3>
+    
+    <!-- Display -->
+    <div class="bg-gray-100 rounded-lg p-4 mb-4">
+        <div x-text="display" class="text-right text-3xl font-mono"></div>
+        <div x-show="operation" x-text="'操作: ' + operation" class="text-sm text-gray-500"></div>
+    </div>
+    
+    <!-- Calculator Buttons (simplified for example) -->
+    <div class="grid grid-cols-4 gap-2">
+        <button @click="inputDigit('7')" class="btn">7</button>
+        <button @click="inputDigit('8')" class="btn">8</button>
+        <button @click="inputDigit('9')" class="btn">9</button>
+        <button @click="inputOperation('/')" class="btn-op">÷</button>
+        <!-- More buttons... -->
+        <button @click="calculate()" class="btn-equals">=</button>
+    </div>
+    
+    <!-- History -->
+    <div class="mt-4" x-show="history.length > 0">
+        <h4 class="text-sm font-semibold">履歴 (History)</h4>
+        <template x-for="item in history" :key="item">
+            <div x-text="item" class="text-xs text-gray-600"></div>
+        </template>
+    </div>
+</div>
+
+<script>
+/**
+ * CalculatorState - Encapsulated calculator component logic
+ * Follows zen-temple principles: class-based state, encapsulated methods
+ */
+class CalculatorState {
+    constructor() {
+        this.display = '0';
+        this.currentValue = 0;
+        this.previousValue = 0;
+        this.operation = '';
+        this.newNumber = true;
+        this.history = [];
+    }
+    
+    inputDigit(digit) {
+        if (this.newNumber) {
+            this.display = digit;
+            this.newNumber = false;
+        } else {
+            this.display = this.display === '0' ? digit : this.display + digit;
+        }
+    }
+    
+    inputOperation(op) {
+        if (this.operation && !this.newNumber) {
+            this.calculate();
+        }
+        this.previousValue = parseFloat(this.display);
+        this.operation = op;
+        this.newNumber = true;
+    }
+    
+    calculate() {
+        if (!this.operation) return;
+        
+        this.currentValue = parseFloat(this.display);
+        let result;
+        
+        switch (this.operation) {
+            case '+': result = this.previousValue + this.currentValue; break;
+            case '-': result = this.previousValue - this.currentValue; break;
+            case '*': result = this.previousValue * this.currentValue; break;
+            case '/': 
+                if (this.currentValue === 0) {
+                    this.display = 'Error';
+                    this.operation = '';
+                    this.newNumber = true;
+                    return;
+                }
+                result = this.previousValue / this.currentValue;
+                break;
+        }
+        
+        this.display = result === Math.floor(result) ? result.toString() : result.toFixed(8).replace(/\.?0+$/, '');
+        this.history.push(`${this.previousValue} ${this.operation} ${this.currentValue} = ${result}`);
+        this.operation = '';
+        this.newNumber = true;
+    }
+    
+    clear() {
+        this.display = '0';
+        this.currentValue = 0;
+        this.previousValue = 0;
+        this.operation = '';
+        this.newNumber = true;
+    }
+}
+</script>
+{%- endmacro -%}
+```
+
+### Usage
+
+```html
+{% extends "layouts/base.html" %}
+{% from "components/calculator.html" import calculator %}
+
+{% block content %}
+    <h1>Calculator Example</h1>
+    {{ calculator() }}
+{% endblock %}
+```
+
+### Running the Example
+
+```bash
+# Run the demo script
+python examples/calculator_demo.py
+
+# Or use with Flask
+python examples/app.py  # See calculator_demo.py for Flask setup
+```
+
+### Architecture Highlights
+
+1. **Pure Logic Layer**: `CalculatorLogic` class has no framework dependencies - pure Python that can be tested independently
+2. **Minimal Bridge**: The `to_context()` method provides only what the template needs
+3. **Zero Legacy**: Clean separation allows logic to be reused in CLI tools, APIs, or other contexts
+4. **Class-based State**: `CalculatorState` class encapsulates all frontend logic
+5. **No Build Step**: Edit templates or logic and reload - no compilation required
+
+### Testing
+
+The calculator includes comprehensive tests for the pure logic layer:
+
+```bash
+pytest tests/test_calculator_logic.py -v
+```
+
+This demonstrates how zen-temple's architecture enables easy testing of business logic without UI dependencies.
+
 ## Todo List with CRUD Operations
 
 Demonstrates class-based state management and computed properties:
