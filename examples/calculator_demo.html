@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -197,6 +197,9 @@
  * - Clean separation between logic and presentation
  */
 class CalculatorState {
+    // Constants
+    static DECIMAL_PRECISION = 8;  // Number of decimal places for display
+    
     constructor() {
         this.display = '0';
         this.currentValue = 0;
@@ -288,7 +291,7 @@ class CalculatorState {
             if (result === Math.floor(result)) {
                 this.display = result.toString();
             } else {
-                this.display = result.toFixed(8).replace(/\.?0+$/, '');
+                this.display = result.toFixed(CalculatorState.DECIMAL_PRECISION).replace(/\.?0+$/, '');
             }
             
             // Add to history
