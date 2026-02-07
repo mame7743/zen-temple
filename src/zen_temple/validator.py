@@ -1,4 +1,4 @@
-"""Component validator for zen-temple."""
+"""zen-templeのコンポーネントバリデータ"""
 
 import re
 from pathlib import Path
@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field
 
 
 class ValidationResult(BaseModel):
-    """Result of component validation."""
+    """コンポーネント検証の結果"""
 
     is_valid: bool
     errors: list[str] = Field(default_factory=list)
@@ -15,28 +15,28 @@ class ValidationResult(BaseModel):
     component_name: str
 
     def add_error(self, message: str) -> None:
-        """Add an error message."""
+        """エラーメッセージを追加"""
         self.errors.append(message)
         self.is_valid = False
 
     def add_warning(self, message: str) -> None:
-        """Add a warning message."""
+        """警告メッセージを追加"""
         self.warnings.append(message)
 
 
 class ComponentValidator:
     """
-    Validates zen-temple component structure and adherence to design philosophy.
+    zen-templeコンポーネントの構造と設計哲学への準拠を検証
 
-    Validates:
-    - No inline JavaScript in HTML (use Alpine.js x-data instead)
-    - Proper use of HTMX attributes
-    - Alpine.js reactive patterns
-    - Template structure
+    検証項目:
+    - HTML内のインラインJavaScriptなし（代わりにAlpine.js x-dataを使用）
+    - HTMX属性の適切な使用
+    - Alpine.jsリアクティブパターン
+    - テンプレート構造
     """
 
     def __init__(self):
-        """Initialize the validator."""
+        """バリデータを初期化"""
         self.rules = [
             self._check_inline_scripts,
             self._check_htmx_usage,
@@ -46,23 +46,23 @@ class ComponentValidator:
 
     def validate_component(self, component_path: Path) -> ValidationResult:
         """
-        Validate a component file.
+        コンポーネントファイルを検証
 
-        Args:
-            component_path: Path to the component HTML file
+        引数:
+            component_path: コンポーネントHTMLファイルへのパス
 
-        Returns:
-            ValidationResult with errors and warnings
+        戻り値:
+            エラーと警告を含むValidationResult
         """
         result = ValidationResult(is_valid=True, component_name=component_path.stem)
 
         if not component_path.exists():
-            result.add_error(f"Component file not found: {component_path}")
+            result.add_error(f"コンポーネントファイルが見つかりません: {component_path}")
             return result
 
         content = component_path.read_text()
 
-        # Run all validation rules
+        # 全ての検証ルールを実行
         for rule in self.rules:
             rule(content, result)
 
@@ -70,14 +70,14 @@ class ComponentValidator:
 
     def validate_string(self, content: str, component_name: str = "inline") -> ValidationResult:
         """
-        Validate component content from a string.
+        文字列からコンポーネント内容を検証
 
-        Args:
-            content: HTML content to validate
-            component_name: Name for the component (for error messages)
+        引数:
+            content: 検証するHTML内容
+            component_name: コンポーネントの名前（エラーメッセージ用）
 
-        Returns:
-            ValidationResult with errors and warnings
+        戻り値:
+            エラーと警告を含むValidationResult
         """
         result = ValidationResult(is_valid=True, component_name=component_name)
 
@@ -87,26 +87,26 @@ class ComponentValidator:
         return result
 
     def _check_inline_scripts(self, content: str, result: ValidationResult) -> None:
-        """Check for inline scripts (which violate zen-temple philosophy)."""
-        # Look for <script> tags that aren't CDN includes
-        # Use a more robust regex that handles whitespace and attributes in closing tags
-        # Pattern explanation:
-        # - <script(?![^>]*src=) : Match <script not followed by src= attribute
-        # - [^>]*> : Match any attributes until >
-        # - [\s\S]*? : Match content (including newlines) non-greedily
-        # - </\s*script[^>]*> : Match closing tag with optional whitespace and attributes
+        """インラインスクリプトをチェック（zen-temple哲学に違反）"""
+        # CDNインクルードではない<script>タグを探す
+        # ホワイトスペースと閉じタグの属性を処理するより堅牢な正規表現を使用
+        # パターンの説明:
+        # - <script(?![^>]*src=) : src=属性がない<scriptにマッチ
+        # - [^>]*> : >まで任意の属性にマッチ
+        # - [\s\S]*? : 内容にマッチ（改行を含む）非貪欲
+        # - </\s*script[^>]*> : オプションのホワイトスペースと属性を持つ閉じタグにマッチ
         script_pattern = r"<script(?![^>]*src=)[^>]*>[\s\S]*?</\s*script[^>]*>"
         matches = re.finditer(script_pattern, content, re.IGNORECASE)
 
         for match in matches:
             script_content = match.group(0)
-            # Allow Alpine.js inline initialization or HTMX extensions
+            # Alpine.jsのインライン初期化またはHTMX拡張を許可
             if "x-data" not in script_content and "htmx" not in script_content.lower():
                 result.add_error(
-                    "Inline script detected. Move logic to Alpine.js x-data functions."
+                    "インラインスクリプトが検出されました。ロジックをAlpine.js x-data関数に移動してください。"
                 )
 
-        # Check for inline event handlers
+        # インラインイベントハンドラーをチェック
         inline_handlers = [
             r"onclick\s*=",
             r"onload\s*=",
@@ -116,12 +116,12 @@ class ComponentValidator:
         for pattern in inline_handlers:
             if re.search(pattern, content, re.IGNORECASE):
                 result.add_error(
-                    f"Inline event handler detected ({pattern}). Use Alpine.js @click, @change, etc."
+                    f"インラインイベントハンドラーが検出されました（{pattern}）。Alpine.jsの@click、@changeなどを使用してください。"
                 )
 
     def _check_htmx_usage(self, content: str, result: ValidationResult) -> None:
-        """Check for proper HTMX usage."""
-        # Look for HTMX attributes
+        """HTMXの適切な使用をチェック"""
+        # HTMX属性を探す
         htmx_attrs = [
             "hx-get",
             "hx-post",
@@ -137,50 +137,50 @@ class ComponentValidator:
         has_htmx = any(attr in content for attr in htmx_attrs)
 
         if has_htmx:
-            # Check that responses are expected to be JSON/HTML fragments, not full pages
+            # レスポンスがJSON/HTMLフラグメントであることを期待し、フルページではないことをチェック
             if "hx-swap" in content:
-                # Warn if potentially replacing full document
+                # フルドキュメントを置き換える可能性がある場合に警告
                 if re.search(r'hx-swap\s*=\s*["\']outerHTML["\']', content):
                     result.add_warning(
-                        "Using hx-swap='outerHTML' on full document. "
-                        "Ensure server returns HTML fragments, not full pages."
+                        "フルドキュメントでhx-swap='outerHTML'を使用しています。"
+                        "サーバーがHTMLフラグメントを返すことを確認してください、フルページではありません。"
                     )
 
     def _check_alpine_usage(self, content: str, result: ValidationResult) -> None:
-        """Check for proper Alpine.js usage."""
-        # Check for x-data (state management)
+        """Alpine.jsの適切な使用をチェック"""
+        # x-data（状態管理）をチェック
         if "x-data" in content:
-            # Ensure x-data is used properly
+            # x-dataが適切に使用されていることを確認
             x_data_pattern = r'x-data\s*=\s*["\']([^"\']*)["\']'
             matches = re.finditer(x_data_pattern, content)
 
             for match in matches:
                 data_content = match.group(1)
-                # Check if it looks like a function call or object
+                # 関数呼び出しまたはオブジェクトのように見えるかチェック
                 if data_content and not ("{" in data_content or "(" in data_content):
                     result.add_warning(
-                        f"x-data='{data_content}' should be a function call or object literal"
+                        f"x-data='{data_content}'は関数呼び出しまたはオブジェクトリテラルである必要があります"
                     )
 
-        # Check for Alpine directives
+        # Alpineディレクティブをチェック
         alpine_directives = ["x-show", "x-if", "x-for", "x-model", "x-text", "x-html"]
         has_alpine = any(directive in content for directive in alpine_directives)
 
         if not has_alpine and "x-data" not in content:
             result.add_warning(
-                "No Alpine.js directives found. Consider using Alpine.js for reactive behavior."
+                "Alpine.jsディレクティブが見つかりませんでした。リアクティブな動作にAlpine.jsの使用を検討してください。"
             )
 
     def _check_template_structure(self, content: str, result: ValidationResult) -> None:
-        """Check basic template structure."""
-        # Check for Jinja2 blocks or includes
+        """基本的なテンプレート構造をチェック"""
+        # Jinja2ブロックまたはインクルードをチェック
         if "{% block" in content or "{% extends" in content or "{% include" in content:
-            # This is good - using Jinja2 template inheritance
+            # これは良い - Jinja2テンプレート継承を使用
             pass
         else:
-            # Standalone component - should have some structure
+            # スタンドアロンコンポーネント - 何らかの構造を持つべき
             if "<html" in content.lower() and "</html>" in content.lower():
                 result.add_warning(
-                    "Component contains full HTML document. "
-                    "Consider breaking into reusable component fragments."
+                    "コンポーネントがフルHTMLドキュメントを含んでいます。"
+                    "再利用可能なコンポーネントフラグメントに分割することを検討してください。"
                 )
