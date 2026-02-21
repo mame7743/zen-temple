@@ -119,7 +119,8 @@ def component(component_name: str, component_type: str, output: Optional[str]) -
 
         click.echo(f"✓ コンポーネントが作成されました: {component_path}")
         click.echo("\nこのコンポーネントを使用するには:")
-        click.echo(f'  {{% include "components/{component_name}.html" %}}')
+        click.echo(f'  {{% from "components/{component_name}.html" import {component_name} %}}')
+        click.echo(f"  {{{{ {component_name}() }}}}")
 
     except Exception as e:
         click.echo(f"コンポーネント作成エラー: {e}", err=True)
@@ -241,41 +242,46 @@ def philosophy() -> None:
     philosophy_text = """
 ╔════════════════════════════════════════════════════════════════╗
 ║                   zen-temple 哲学                               ║
-║         (ゼロテンプレート - ゼロビルド - ゼロマジック)           ║
+║                 ZEN: Zero Magic / Explicit Flow                 ║
+║                      / Neutral Backend                          ║
 ╚════════════════════════════════════════════════════════════════╝
 
-1. ビルドステップ不要
-   テンプレートを編集して即座に変更を確認。webpackもバンドラーも
-   コンパイルも不要。ページをリロードするだけ。
+【Z】Zero Magic (マジックの排除)
+   裏側で暗黙的に動く抽象化を使わず、何が起きているか完全に
+   透明で予測可能なコードを書くこと。
+   - インラインオブジェクトではなくクラスベースの状態管理
+   - x-data="new ComponentState()" パターンを使用
+   - 見えないマジック変換なし
 
-2. 隠された抽象化なし
-   書いたものがそのまま動く。マジック変換も隠された複雑さもなし。
-   テンプレートはテンプレート。
+【E】Explicit Flow (明示的なフロー)
+   通信処理（fetch）や状態の更新は、JSクラス内で明示的に記述すること。
+   - fetchはクラスメソッド内でasync/awaitで明示的に記述
+   - 成功したらバックエンドから最新データで丸ごと再代入
+   - 状態の変化が追いやすい、予測可能なコード
 
-3. テンプレート中心設計
-   テンプレートが真実の源。すべてがHTMLから始まる。
-   コンポーネントは単なるJinja2のインクルード。
+【N】Neutral Backend (中立なバックエンド)
+   バックエンドは特定のUIに依存しない「純粋なJSON API」として設計。
+   - サーバーはJSONを返す（HTMLフラグメントではない）
+   - UIロジックはフロントエンドのJSクラスが担当
+   - バックエンドとフロントエンドの関心の分離
 
-4. ロジックはAlpine.js内
-   状態管理はx-data関数に属する。HTMLは宣言的に保つ。
-   全てのクライアントサイドのリアクティビティにAlpine.jsを使用。
+データ管理の絶対ルール:
+  1. サーバー状態の直接書き換え禁止
+     push(), splice(), pop() などの破壊的メソッドを使わないこと。
+  2. バックエンド主導の更新
+     APIを叩き、成功したら最新データで丸ごと再代入。
+  3. 状態の分離
+     サーバー状態（this.items）とUI状態（this.newText）を明確に分ける。
 
-5. サーバーはJSON/HTMLを返す
-   APIエンドポイントはJSONデータまたはHTMLフラグメントを返す。
-   クライアント側で処理方法を決定（Alpine.jsまたはHTMX）。
-
-6. 通信にはHTMX
-   全てのサーバー通信とイベントにHTMXを使用。細かい制御が必要な
-   場合を除き、手動でfetch()を呼び出さない。
-
-7. ゼロマジック
-   全てのコード行が可視化され編集可能。コード生成もビルド成果物も
-   隠しファイルもなし。
+SFCコーディング規約:
+  • ファイル拡張子は .html
+  • 全体を {%- macro component_name(args) -%} で囲む
+  • ルートのHTML要素に x-data="new ComponentState()" を設定
+  • コンポーネントの状態とロジックはJSクラス内に記述
 
 技術スタック:
-  • HTMX      - サーバー通信と動的更新
   • Alpine.js - リアクティブな状態とクライアントサイドロジック
-  • Jinja2    - テンプレートレンダリングと構成
+  • Jinja2    - テンプレートレンダリングと構成（Macroベース SFC）
   • Tailwind  - CDN経由のスタイリング（ビルド不要）
 
 詳細はこちら: https://github.com/mame7743/zen-temple

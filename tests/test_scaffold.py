@@ -140,3 +140,91 @@ def test_create_config_file(tmp_path: Path) -> None:
     assert "test_project" in content
     assert "htmx" in content
     assert "alpine" in content
+
+
+def test_generate_component_uses_macro(tmp_path: Path) -> None:
+    """Test that generated components use the SFC macro wrapper."""
+    generator = ScaffoldGenerator(project_root=tmp_path)
+
+    output_dir = tmp_path / "components"
+    component_path = generator.generate_component(
+        component_name="my_widget", component_type="basic", output_dir=output_dir
+    )
+
+    content = component_path.read_text()
+    # SFCパターン: macroラッパー
+    assert "macro my_widget" in content
+    assert "{%- endmacro" in content or "{% endmacro" in content
+
+
+def test_generate_component_uses_class_based_xdata(tmp_path: Path) -> None:
+    """Test that generated components use new ClassName() pattern for x-data."""
+    generator = ScaffoldGenerator(project_root=tmp_path)
+
+    output_dir = tmp_path / "components"
+    component_path = generator.generate_component(
+        component_name="my_widget", component_type="basic", output_dir=output_dir
+    )
+
+    content = component_path.read_text()
+    # ZEN哲学: インラインオブジェクトではなくクラスベースの状態管理
+    assert 'x-data="new MyWidgetState()"' in content
+    assert "class MyWidgetState" in content
+
+
+def test_generate_component_list_uses_api_fetch(tmp_path: Path) -> None:
+    """Test that list components use fetch() for explicit API calls."""
+    generator = ScaffoldGenerator(project_root=tmp_path)
+
+    output_dir = tmp_path / "components"
+    component_path = generator.generate_component(
+        component_name="user_list", component_type="list", output_dir=output_dir
+    )
+
+    content = component_path.read_text()
+    # ZEN哲学【E】Explicit Flow: fetchで明示的にAPIを叩く
+    assert "fetch(" in content
+    assert "async" in content
+    # サーバー状態の丸ごと再代入
+    assert "this.items = " in content
+
+
+def test_example_counter_uses_class_pattern(tmp_path: Path) -> None:
+    """Test that generated counter example uses macro + class pattern."""
+    generator = ScaffoldGenerator(project_root=tmp_path)
+    generator.generate_project("test_project", include_examples=True, include_server=False)
+
+    counter_path = tmp_path / "test_project/templates/components/counter.html"
+    content = counter_path.read_text()
+
+    assert "macro counter" in content
+    assert "class CounterState" in content
+    assert 'x-data="new CounterState(' in content
+
+
+def test_example_todo_uses_api_pattern(tmp_path: Path) -> None:
+    """Test that generated todo example uses backend-driven update pattern."""
+    generator = ScaffoldGenerator(project_root=tmp_path)
+    generator.generate_project("test_project", include_examples=True, include_server=False)
+
+    todo_path = tmp_path / "test_project/templates/components/todo.html"
+    content = todo_path.read_text()
+
+    assert "macro todo" in content
+    assert "class TodoState" in content
+    # ZEN哲学: バックエンド主導の更新
+    assert "fetch(" in content
+    # サーバー状態とUI状態の分離
+    assert "this.todos" in content
+    assert "this.newTodoText" in content
+    # 破壊的メソッドを使わない
+    assert ".push(" not in content
+
+
+def test_to_class_name(tmp_path: Path) -> None:
+    """Test the component name to class name conversion."""
+    generator = ScaffoldGenerator(project_root=tmp_path)
+    assert generator._to_class_name("my_widget") == "MyWidgetState"
+    assert generator._to_class_name("counter") == "CounterState"
+    assert generator._to_class_name("data-fetch") == "DataFetchState"
+    assert generator._to_class_name("user_list") == "UserListState"

@@ -32,7 +32,7 @@ def test_new_project(runner: CliRunner, tmp_path: Path) -> None:
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(main, ["new", "test_project"])
         assert result.exit_code == 0
-        assert "Project created successfully" in result.output
+        assert "プロジェクトが正常に作成されました" in result.output
 
         # Check that project was created
         assert Path("test_project").exists()
@@ -68,7 +68,7 @@ def test_component_command(runner: CliRunner, tmp_path: Path) -> None:
 
         result = runner.invoke(main, ["component", "my_widget"])
         assert result.exit_code == 0
-        assert "Component created" in result.output
+        assert "コンポーネントが作成されました" in result.output
 
         # Check component was created
         assert Path("templates/components/my_widget.html").exists()
@@ -94,7 +94,7 @@ def test_init_command(runner: CliRunner, tmp_path: Path) -> None:
     with runner.isolated_filesystem(temp_dir=tmp_path):
         result = runner.invoke(main, ["init", "--project-name", "my_project"])
         assert result.exit_code == 0
-        assert "Configuration created" in result.output
+        assert "設定ファイルが作成されました" in result.output
 
         # Check config was created
         assert Path("zen-temple.yaml").exists()
@@ -109,7 +109,7 @@ def test_validate_command(runner: CliRunner, tmp_path: Path) -> None:
 
         result = runner.invoke(main, ["validate", "test.html"])
         assert result.exit_code == 0
-        assert "valid" in result.output.lower()
+        assert "有効" in result.output
 
 
 def test_validate_invalid_component(runner: CliRunner, tmp_path: Path) -> None:
@@ -121,7 +121,7 @@ def test_validate_invalid_component(runner: CliRunner, tmp_path: Path) -> None:
 
         result = runner.invoke(main, ["validate", "bad.html"])
         assert result.exit_code == 1
-        assert "issues" in result.output.lower()
+        assert "問題があります" in result.output
 
 
 def test_list_components(runner: CliRunner, tmp_path: Path) -> None:
@@ -143,6 +143,6 @@ def test_philosophy_command(runner: CliRunner) -> None:
     result = runner.invoke(main, ["philosophy"])
     assert result.exit_code == 0
     assert "zen-temple" in result.output
-    assert "Philosophy" in result.output
-    assert "HTMX" in result.output
+    assert "哲学" in result.output
+    assert "Zero Magic" in result.output
     assert "Alpine.js" in result.output
