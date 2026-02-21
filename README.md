@@ -1,5 +1,9 @@
 # zen-temple
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/3b3466ec-9a18-4cd6-8d42-1327de6764a9" alt="zen-temple logo" width="600">
+</p>
+
 [![Python Version](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
