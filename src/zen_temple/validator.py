@@ -42,6 +42,8 @@ class ComponentValidator:
             self._check_htmx_usage,
             self._check_alpine_usage,
             self._check_template_structure,
+            self._check_macro_wrapper,
+            self._check_server_state_mutation,
         ]
 
     def validate_component(self, component_path: Path) -> ValidationResult:
@@ -100,8 +102,12 @@ class ComponentValidator:
 
         for match in matches:
             script_content = match.group(0)
-            # Alpine.jsのインライン初期化またはHTMX拡張を許可
-            if "x-data" not in script_content and "htmx" not in script_content.lower():
+            # Alpine.jsのインライン初期化、HTMX拡張、またはSFCスタイルのクラス定義を許可
+            if (
+                "x-data" not in script_content
+                and "htmx" not in script_content.lower()
+                and "class " not in script_content
+            ):
                 result.add_error(
                     "インラインスクリプトが検出されました。ロジックをAlpine.js x-data関数に移動してください。"
                 )
@@ -161,6 +167,13 @@ class ComponentValidator:
                     result.add_warning(
                         f"x-data='{data_content}'は関数呼び出しまたはオブジェクトリテラルである必要があります"
                     )
+                # ZEN哲学: インラインオブジェクトではなくクラスベースの状態管理を推奨
+                if data_content and data_content.strip().startswith("{") and "new " not in data_content:
+                    result.add_warning(
+                        "x-dataにインラインオブジェクトが使用されています。"
+                        "'new ClassName()' 形式のクラスベースの状態管理を使用してください。"
+                        "例: x-data=\"new ComponentState()\""
+                    )
 
         # Alpineディレクティブをチェック
         alpine_directives = ["x-show", "x-if", "x-for", "x-model", "x-text", "x-html"]
@@ -184,3 +197,26 @@ class ComponentValidator:
                     "コンポーネントがフルHTMLドキュメントを含んでいます。"
                     "再利用可能なコンポーネントフラグメントに分割することを検討してください。"
                 )
+
+    def _check_macro_wrapper(self, content: str, result: ValidationResult) -> None:
+        """SFCパターンに従ったJinja2マクロラッパーをチェック"""
+        if "{% macro" not in content and "{%- macro" not in content:
+            result.add_warning(
+                "コンポーネントに {% macro %} ラッパーがありません。"
+                "SFCパターンに従い、{% macro component_name(args) %} で囲んでください。"
+            )
+
+    def _check_server_state_mutation(self, content: str, result: ValidationResult) -> None:
+        """サーバー状態への破壊的操作をチェック（ZEN哲学: サーバー状態の直接書き換え禁止）"""
+        mutation_patterns = [
+            r"this\.\w+\.push\s*\(",
+            r"this\.\w+\.splice\s*\(",
+            r"this\.\w+\.pop\s*\(",
+        ]
+        for pattern in mutation_patterns:
+            if re.search(pattern, content):
+                result.add_warning(
+                    "サーバー状態への破壊的操作（push/splice/pop）が検出されました。"
+                    "APIを通じてデータを更新し、バックエンドから受け取った最新データで丸ごと再代入してください。"
+                )
+                break
