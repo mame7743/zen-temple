@@ -109,7 +109,8 @@ class ComponentValidator:
                 and "class " not in script_content
             ):
                 result.add_error(
-                    "インラインスクリプトが検出されました。ロジックをAlpine.js x-data関数に移動してください。"
+                    "インラインスクリプトが検出されました。"
+                    "ロジックをAlpine.js x-data関数に移動してください。"
                 )
 
         # インラインイベントハンドラーをチェック
@@ -168,7 +169,11 @@ class ComponentValidator:
                         f"x-data='{data_content}'は関数呼び出しまたはオブジェクトリテラルである必要があります"
                     )
                 # ZEN哲学: インラインオブジェクトではなくクラスベースの状態管理を推奨
-                if data_content and data_content.strip().startswith("{") and "new " not in data_content:
+                if (
+                    data_content
+                    and data_content.strip().startswith("{")
+                    and "new " not in data_content
+                ):
                     result.add_warning(
                         "x-dataにインラインオブジェクトが使用されています。"
                         "'new ClassName()' 形式のクラスベースの状態管理を使用してください。"
