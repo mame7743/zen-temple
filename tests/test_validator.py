@@ -47,7 +47,7 @@ def test_validate_inline_script(tmp_path: Path) -> None:
 
     assert not result.is_valid
     assert len(result.errors) > 0
-    assert any("inline script" in err.lower() for err in result.errors)
+    assert any("インラインスクリプト" in err for err in result.errors)
 
 
 def test_validate_inline_event_handler(tmp_path: Path) -> None:
@@ -62,7 +62,7 @@ def test_validate_inline_event_handler(tmp_path: Path) -> None:
 
     assert not result.is_valid
     assert len(result.errors) > 0
-    assert any("inline event handler" in err.lower() for err in result.errors)
+    assert any("インラインイベントハンドラー" in err for err in result.errors)
 
 
 def test_validate_htmx_usage(tmp_path: Path) -> None:
@@ -114,7 +114,7 @@ def test_validate_nonexistent_file(tmp_path: Path) -> None:
 
     assert not result.is_valid
     assert len(result.errors) > 0
-    assert any("not found" in err.lower() for err in result.errors)
+    assert any("見つかりません" in err for err in result.errors)
 
 
 def test_validate_class_based_xdata() -> None:
